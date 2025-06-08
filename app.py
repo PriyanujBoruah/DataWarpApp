@@ -62,7 +62,7 @@ try:
 except ImportError:
     SKLEARN_AVAILABLE = False
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
