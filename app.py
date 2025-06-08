@@ -24,9 +24,20 @@ import plotly.figure_factory as ff
 import webbrowser
 import threading
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 # --- Environment and Supabase ---
 from dotenv import load_dotenv
-load_dotenv() # Load environment variables from .env file
+dotenv_path = resource_path('.env')
+load_dotenv(dotenv_path=dotenv_path)
 
 from supabase import create_client, Client, PostgrestAPIError, AuthApiError
 from functools import wraps
@@ -62,17 +73,7 @@ try:
 except ImportError:
     SKLEARN_AVAILABLE = False
 
-__version__ = "1.0.2"
-
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    return os.path.join(base_path, relative_path)
+__version__ = "1.0.3"
 
 
 # --- Configuration ---
