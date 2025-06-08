@@ -165,14 +165,6 @@
 
         <button type="submit" class="btn btn-login">Sign in</button>
     </form>
-
-    <div class="social-login">
-        <div class="social-icons">
-            <a href="#" title="Login with Google"><i class="fab fa-google"></i></a>
-            <a href="#" title="Login with GitHub"><i class="fab fa-github"></i></a>
-            <a href="#" title="Login with Facebook"><i class="fab fa-facebook-f"></i></a>
-        </div>
-    </div>
     
     <p class="mt-4 text-center" style="font-size:0.85rem;">
         Don't have an account? <a href="{{ url_for('signup', next=request.args.get('next', '')) }}">Sign up here</a>
