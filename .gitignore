@@ -1,0 +1,28 @@
+# Python virtual environment
+venv/
+.venv/
+
+# PyInstaller files
+dist/
+build/
+*.spec
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDE files
+.vscode/
+.idea/
+
+# Session and upload folders (user-generated data)
+.flask_session/
+uploads/
+saved_sessions/
+
+# Logs
+*.log
+updater-log.txt
+
+# Environment variables - uncomment if your repo is public
+# .env 

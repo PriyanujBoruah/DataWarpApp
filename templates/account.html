@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Account Management - DataWarp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --brand-purple: #7612fa;
+            --brand-pink: #fa12e3;
+            --brand-cyan: #40ddff;
+        }
+
+        body {
+            padding-top: 5rem; /* For fixed navbar */
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+            background-color: #f8f9fa; 
+            color: #212529; 
+        }
+
+        /* --- NAVBAR --- */
+        .navbar {
+            border-width: 2px; border-bottom-style: solid;
+            border-image: linear-gradient(100deg, var(--brand-cyan), var(--brand-purple), var(--brand-pink)) 1;
+            background-color: #fff !important; 
+        }
+        .navbar-brand { font-size: 1.625rem; font-weight: 900; color: #000 !important; }
+        .navbar .nav-link { color: #212529 !important; font-weight: 500; }
+        .navbar .nav-link:hover, .navbar .nav-link.active { color: var(--brand-purple) !important; }
+        .user-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(100deg, var(--brand-cyan), var(--brand-purple), var(--brand-pink));
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1rem; cursor: pointer;
+            border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+
+        /* --- LAYOUT & CARD STYLES --- */
+        .account-container { display: flex; flex-wrap: wrap; gap: 2rem; margin-top: 1.5rem; }
+        .account-sidebar { flex: 1; min-width: 320px; margin-bottom: 1.5rem; }
+        .account-main { flex: 1.5; min-width: 320px; }
+        
+        .card-section {
+            background-color: #ffffff;
+            padding: 1.5rem 2rem;
+            border-radius: 18px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .card-section h5 { 
+            color: #212529; 
+            margin: -1.5rem -2rem 1.25rem -2rem; /* Pull header to edges */
+            padding: 1rem 2rem 0.75rem 2rem;
+            border-bottom: 1px solid #e9ecef; 
+            font-weight: 700; 
+        }
+        hr {
+            border-color: #e9ecef;
+            opacity: 1;
+        }
+        
+        /* --- CONDENSED & PROFESSIONAL FORM STYLES --- */
+        .form-label {
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: #495057;
+            margin-bottom: 0.3rem;
+        }
+        .form-control, .form-select {
+            padding: 0.6rem 0.9rem !important;
+            font-size: 0.9rem !important;
+            border: 1px solid #ced4da !important;
+            border-radius: 8px !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-purple) !important;
+            box-shadow: 0 0 0 3px rgba(118, 18, 250, 0.15) !important;
+        }
+        .form-control:disabled {
+            background-color: #e9ecef !important;
+            opacity: 0.7;
+        }
+
+        /* --- UNIFIED BUTTON STYLES --- */
+        .btn {
+            font-weight: 600;
+            font-size: .9rem !important;
+            border-radius: 8px;
+            padding: 0.6rem 1.2rem;
+        }
+        .btn-primary {
+            background: linear-gradient(100deg, var(--brand-cyan), var(--brand-purple), var(--brand-pink)) !important;
+            border: none;
+            color: #fff !important;
+        }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-password-change {
+            background-color: transparent !important;
+            border: 1px solid var(--brand-purple) !important;
+            color: var(--brand-purple) !important;
+        }
+        .btn-password-change:hover {
+            background-color: var(--brand-purple) !important;
+            color: #fff !important;
+        }
+        .btn-outline-brand {
+            border: 1px solid #dee2e6 !important;
+            color: #495057 !important;
+            background-color: #fff !important;
+        }
+        .btn-outline-brand:hover {
+            border-color: var(--brand-purple) !important;
+            background-color: var(--brand-purple) !important;
+            color: #fff !important;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(100deg, var(--brand-cyan), var(--brand-purple), var(--brand-pink));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: bold;
+        }
+        
+        /* --- REFERRAL & SUBSCRIPTION STYLES --- */
+        .referral-code-display {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 0.5em 0.8em;
+            border-radius: 8px;
+            flex-grow: 1; 
+            font-size: 0.9em;
+            border: 1px solid #e2e8f0;
+        }
+
+        @keyframes gradientAnimationInteractiveCard {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .referral-rewards-card {
+            background: linear-gradient(110deg, var(--brand-cyan), var(--brand-purple), var(--brand-pink));
+            background-size: 250% 250%;
+            animation: gradientAnimationInteractiveCard 15s ease infinite;
+            color: #fff;
+            border-radius: 18px;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .referral-graphic {
+            flex-shrink: 0;
+            width: 90px;
+            height: 90px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .referral-graphic i.bi {
+            font-size: 3rem;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .referral-rewards-content h5 {
+            color: #fff;
+            font-weight: 700;
+            border: none;
+            padding: 0;
+            margin: 0 0 0.5rem 0;
+        }
+        .referral-rewards-content p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .referral-rewards-content .progress {
+            background-color: rgba(255,255,255,0.25);
+            height: 8px;
+        }
+        .referral-rewards-content .progress-bar {
+            background-color: #fff;
+        }
+        .referral-rewards-content .small {
+            opacity: 0.8;
+        }
+        @media (max-width: 576px) {
+            .referral-rewards-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
+                padding: 1.5rem;
+            }
+        }
+
+        /* --- NEW AWESOME SUBSCRIPTION STATUS --- */
+        .subscription-status-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background-color: #f1f1f9;
+            border: 1px solid #e9ecef;
+            padding: 1.25rem;
+            border-radius: 14px;
+        }
+        .subscription-icon {
+            flex-shrink: 0;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(100deg, var(--brand-cyan), var(--brand-purple), var(--brand-pink));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .tier-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .validity-date {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background-color: #e2e8f0;
+            padding: 0.25rem 0.6rem;
+            border-radius: 50px; /* pill shape */
+            font-size: 0.8rem;
+            color: #495057;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top">
+        <div class="container-fluid align-items-center">
+            <img src="{{ url_for('static', filename='img/logomain.png') }}" class="logo-img me-2 ms-3" alt="DataWarp Logo" style="height: 25px;">
+            <a class="navbar-brand" href="{{ url_for('index') }}">DataWarp</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAccount" aria-controls="navbarNavAccount" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon" style="background-image: url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0, 0, 0, 0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e\");"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavAccount">
+                <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                    {% if current_user %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('clean_data_interface') }}">Clean Data</a></li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="user-avatar">
+                                    {{ current_user_display_name[0]|upper if current_user_display_name else 'U' }}
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li>
+                                    <div class="px-3 py-2 text-center">
+                                        <div class="user-avatar mx-auto mb-2" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                                            {{ current_user_display_name[0]|upper if current_user_display_name else 'U' }}
+                                        </div>
+                                        <h6 class="mb-0 dropdown-header-text">{{ current_user_display_name }}</h6>
+                                        {% if user_profile_data and user_profile_data.email != 'N/A' %}
+                                        <small class="text-muted">{{ user_profile_data.email }}</small>
+                                        {% elif current_user and current_user.email %}
+                                        <small class="text-muted">{{ current_user.email }}</small>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item active" href="{{ url_for('account') }}"><i class="bi bi-gear-fill me-2"></i>Account Settings</a></li>
+                                {% if current_user.referral_info %}
+                                <li>
+                                    <a class="dropdown-item d-flex justify-content-between align-items-center" href="{{ url_for('account') }}#referrals_section">
+                                        <span><i class="bi bi-people-fill me-2"></i>Referrals</span>
+                                        <span class="badge rounded-pill bg-primary">
+                                            {{ current_user.referral_info.count }}/{{ current_user.referral_info.reward_target }}
+                                        </span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('signup') }}">Sign Up</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2 class="mb-4 page-title">Account Management</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message | safe }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="account-container">
+            <div class="account-sidebar">
+                 <div class="card-section">
+                    <h5>User Information</h5>
+                    <form method="POST" action="{{ url_for('account') }}" class="mt-4">
+                        <input type="hidden" name="form_type" value="profile">
+                        <div class="mb-2">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" value="{{ user_profile_data.email | default('N/A') }}" disabled>
+                        </div>
+                        <div class="mb-2">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ user_profile_data.username | default('') }}">
+                        </div>
+                        <div class="mb-2">
+                            <label for="full_name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="full_name" name="full_name" value="{{ user_profile_data.full_name | default('') }}">
+                        </div>
+                        <div class="mb-2">
+                            <label for="occupation" class="form-label">Occupation</label>
+                            <input type="text" class="form-control" id="occupation" name="occupation" value="{{ user_profile_data.occupation | default('') }}">
+                        </div>
+                        <div class="mb-2">
+                            <label for="workplace" class="form-label">Workplace</label>
+                            <input type="text" class="form-control" id="workplace" name="workplace" value="{{ user_profile_data.workplace | default('') }}">
+                        </div>
+                        <div class="d-flex justify-content-end mt-3">
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="card-section">
+                    <h5>Change Password</h5>
+                     <form method="POST" action="{{ url_for('account') }}" class="mt-4">
+                        <input type="hidden" name="form_type" value="password">
+                        <div class="mb-2">
+                            <label for="current_password_ux" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="current_password_ux" name="current_password_ux" placeholder="Enter current password">
+                             <small class="form-text text-muted">Required to set a new password.</small>
+                        </div>
+                        <div class="mb-2">
+                            <label for="new_password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Min. 6 characters">
+                        </div>
+                        <div class="mb-2">
+                            <label for="confirm_new_password" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirm_new_password" name="confirm_new_password">
+                        </div>
+                        <div class="d-flex justify-content-end mt-3">
+                            <button type="submit" class="btn btn-password-change">Change Password</button>
+                        </div>
+                     </form>
+                </div>
+            </div>
+
+            <div class="account-main">
+                <div class="card-section" id="subscription_section">
+                    <h5>Subscription</h5>
+                     
+                     <!-- NEW AWESOME SUBSCRIPTION STATUS CARD -->
+                     <div class="subscription-status-card mb-4 mt-4">
+                        <div class="subscription-icon">
+                            <i class="bi bi-gem"></i>
+                        </div>
+                        <div class="subscription-details">
+                            <h6 class="tier-name text-gradient">{{ (user_profile_data.subscription_tier | default('N/A') | capitalize) }}</h6>
+                             {% if user_profile_data.subscription_tier != 'basic' and user_profile_data.valid_till and user_profile_data.valid_till != 'N/A' %}
+                            <div class="validity-date">
+                                <i class="bi bi-calendar-check"></i>
+                                <span>Valid until: {{ user_profile_data.valid_till }}</span>
+                            </div>
+                             {% endif %}
+                        </div>
+                        <a href="#" class="btn btn-sm btn-outline-brand ms-auto">
+                            Manage Plans <i class="bi bi-box-arrow-up-right ms-1"></i>
+                        </a>
+                     </div>
+                     <!-- END AWESOME SUBSCRIPTION STATUS CARD -->
+                     
+                     <hr class="my-4">
+                    <div>
+                        <p class="form-label mb-2">Your Referral Code:</p>
+                        <div class="referral-code-container d-flex align-items-center gap-2">
+                            <strong class="referral-code-display" id="referralCodeDisplay">{{ user_profile_data.referral_code | default('N/A') }}</strong>
+                            <button class="btn btn-sm btn-outline-secondary btn-copy-ref" type="button" id="copyReferralBtn" title="Copy to clipboard">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Share this code with new users to enter during signup.</small>
+                    </div>
+                </div>
+
+                <div class="referral-rewards-card" id="referrals_section">
+                    <div class="referral-graphic">
+                        <i class="bi bi-gift-fill"></i>
+                    </div>
+                    <div class="referral-rewards-content">
+                        {% set ref_count = referred_users_count if referred_users_count is not none else 0 %}
+                        {% set ref_target = current_user.referral_info.reward_target if current_user and current_user.referral_info else 10 %}
+                        {% set progress_percent = (ref_count / ref_target * 100) | int if ref_target > 0 else 0 %}
+                        
+                        <h5>Referral Rewards</h5>
+                        <p>Get 6 months of <strong>DataWarp Pro</strong> for free for every {{ref_target}} successful referrals!</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center small">
+                            <span>Progress</span>
+                            <span><strong>{{ ref_count }}</strong> / {{ ref_target }}</span>
+                        </div>
+                        <div class="progress" role="progressbar" aria-label="Referral progress" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar" style="width: {{ progress_percent }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyButton = document.getElementById('copyReferralBtn');
+            const referralCodeDisplay = document.getElementById('referralCodeDisplay');
+
+            if (copyButton && referralCodeDisplay) {
+                copyButton.addEventListener('click', function() {
+                    const codeToCopy = referralCodeDisplay.innerText.trim();
+                    if (codeToCopy && codeToCopy !== 'N/A') {
+                        navigator.clipboard.writeText(codeToCopy).then(function() {
+                            const originalIconHTML = copyButton.innerHTML;
+                            copyButton.innerHTML = '<i class="bi bi-check-lg"></i>';
+                            copyButton.classList.remove('btn-outline-secondary');
+                            copyButton.classList.add('btn-success');
+                            copyButton.disabled = true;
+
+                            setTimeout(function() {
+                                copyButton.innerHTML = originalIconHTML;
+                                copyButton.classList.remove('btn-success');
+                                copyButton.classList.add('btn-outline-secondary');
+                                copyButton.disabled = false;
+                            }, 2000);
+                        }).catch(function(err) {
+                            console.error('Failed to copy text: ', err);
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

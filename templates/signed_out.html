@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome - DataWarp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+            background-color: #f0f2f5; /* A light, neutral background */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0; /* Ensure no default margin */
+        }
+        .navbar-custom { /* A simple navbar for this page */
+            background-color: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0.75rem 1rem;
+            /* Make it fixed if you want it to stay at the top, adjust body padding-top then */
+            /* position: fixed; top: 0; left: 0; right: 0; z-index: 1030; */
+        }
+        /* If navbar is fixed, uncomment this and adjust padding-top in body */
+        /* body { padding-top: calc(0.75rem + 0.75rem + YOUR_NAVBAR_HEIGHT_HERE); } */
+
+        .navbar-custom .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0a192f;
+        }
+        .navbar-custom .nav-link {
+            color: #0a192f;
+            font-weight: 500;
+        }
+        .hero-signed-out {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem; /* Padding for the content area */
+        }
+        .hero-signed-out .content-wrapper {
+            max-width: 600px;
+            background-color: #ffffff;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .hero-signed-out h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #0a192f;
+            margin-bottom: 1rem;
+        }
+        .hero-signed-out p {
+            font-size: 1.1rem;
+            color: #555e6d;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .hero-signed-out .btn {
+            font-size: 1rem;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+        .btn-custom-primary {
+            background-color: #7612fa; /* Your theme's primary color */
+            border-color: #7612fa;
+            color: white;
+        }
+        .btn-custom-primary:hover {
+            background-color: #5c0ec4;
+            border-color: #5c0ec4;
+        }
+        .btn-custom-secondary {
+            background-color: transparent;
+            border-color: #7612fa;
+            color: #7612fa;
+        }
+        .btn-custom-secondary:hover {
+            background-color: rgba(118, 18, 250, 0.1);
+        }
+        footer.app-footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+            background-color: #e9ecef;
+            margin-top: auto; /* Pushes footer to bottom if content is short */
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('signed_out_page') }}">
+                <img src="{{ url_for('static', filename='img/logomain.png') }}" alt="DataWarp Logo" style="height: 25px; margin-right: 0.5rem; vertical-align: text-bottom;">
+                DataWarp
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavSignedOut" aria-controls="navbarNavSignedOut" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavSignedOut">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('signup') }}">Sign Up</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="hero-signed-out">
+        <div class="content-wrapper">
+            <h1>Welcome to DataWarp!</h1>
+            <p>The intelligent platform to effortlessly clean, transform, and prepare your data for analysis. Sign in to manage your projects or sign up to get started.</p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                <a href="{{ url_for('login') }}" class="btn btn-custom-primary btn-lg px-4 gap-3">Login</a>
+                <a href="{{ url_for('signup') }}" class="btn btn-custom-secondary btn-lg px-4">Sign Up</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>© <span id="current-year"></span> DataWarp. All rights reserved.
+        </p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    
+    <!-- JAVASCRIPT FOR HASH HANDLING - MOVED/COPIED HERE -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // For dynamic year in footer if not using Jinja context for it
+        const yearSpan = document.getElementById('current-year');
+        if (yearSpan) {
+            yearSpan.textContent = new Date().getFullYear();
+        }
+
+        function getHashParameters() {
+            const hash = window.location.hash.substring(1);
+            const params = {};
+            if (hash) {
+                hash.split('&').forEach(part => {
+                    const item = part.split('=');
+                    if (item.length === 2) {
+                        params[item[0]] = decodeURIComponent(item[1]);
+                    }
+                });
+            }
+            return params;
+        }
+
+        const hashParams = getHashParameters();
+        console.log("Landed on signed_out page. Current Hash Params:", hashParams); // For debugging
+
+        if (hashParams.type === 'recovery' && hashParams.access_token) {
+            console.log('Password recovery detected on signed_out page. Access Token (first 10 chars):', hashParams.access_token.substring(0,10) + "...");
+            
+            const recoveryUrl = new URL("{{ url_for('set_new_password_form', _external=True, _scheme=request.scheme) }}");
+            recoveryUrl.searchParams.append('token', hashParams.access_token);
+            
+            if (hashParams.refresh_token) { // Supabase recovery flow usually includes refresh_token
+                 recoveryUrl.searchParams.append('refresh_token', hashParams.refresh_token);
+                 console.log('Refresh token also found in hash and added to recovery URL.');
+            }
+            
+            // Clear the hash from the URL bar immediately to hide tokens
+            history.replaceState(null, document.title, window.location.pathname + window.location.search); // Clears hash
+            
+            console.log("Redirecting to server for password reset form:", recoveryUrl.toString());
+            window.location.href = recoveryUrl.toString(); // Redirect to server-side form handler
+
+        } else if (hashParams.type === 'signup' && hashParams.access_token) {
+            console.log('Email confirmation detected on signed_out page.');
+            alert('Your email has been confirmed! You can now log in.');
+            history.replaceState(null, document.title, window.location.pathname + window.location.search); // Clear hash
+            window.location.pathname = "{{ url_for('login') }}"; // Redirect to login
+        }
+        // Add other hash type handlers if needed (e.g., magiclink)
+    });
+    </script>
+</body>
+</html>

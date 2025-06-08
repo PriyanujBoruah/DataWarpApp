@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Data Visualization</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <style>
+        body {
+            font-size: 14px;
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+        }
+
+        /* Loading Overlay Styles */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            z-index: 1070; display: flex; justify-content: center;
+            align-items: center; flex-direction: column;
+        }
+        .loading-overlay .progress-container {
+            width: 70%; max-width: 600px; padding: 25px;
+            background-color: #fff; border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center;
+        }
+        .loading-overlay .progress {
+            height: 2.5rem; font-size: 1.1rem;
+            border-radius: 0.5rem; margin-bottom: 1rem;
+        }
+        .loading-overlay .progress-bar { background-color: #7612fa; }
+        .loading-overlay p { font-size: 1rem; color: #333; font-weight: 500; }
+
+        /* Main layout for sidebar and content */
+        .main-container {
+            display: flex;
+            height: calc(100vh); /* Full height minus new navbar height */
+        }
+
+        .card { margin-bottom: 2rem; border: 1px solid #e0e0e0; border-radius: 14px !important; }
+        .card-header { font-weight: 600; background-color: #FFFFFF ; font-size: 1.05rem; padding: 0.75rem 1.25rem;}
+
+        .sidebar {
+            width: 280px; flex-shrink: 0; padding: 1.5rem 1rem;
+            border-right: 1px solid #e0e0e0; background-color: #ffffff;
+            overflow-y: auto; box-shadow: 2px 0 5px rgba(0,0,0,0.03);
+        }
+        .sidebar h6 {
+            font-weight: 700; margin-bottom: 1.2rem; padding-bottom: 0.6rem;
+            border-bottom: 2px solid #7612fa; color: #343a40;
+            font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .sidebar .list-group-item {
+            border: none; padding: 0.8rem 1.2rem; font-size: 0.9rem;
+            color: #495057; background-color: transparent; border-radius: 0.375rem;
+            margin-bottom: 0.3rem; transition: background-color 0.2s ease, color 0.2s ease; cursor: pointer;
+        }
+        .sidebar .list-group-item i {
+            margin-right: 0.8rem; color: #7612fa; width: 1.2em; text-align: center;
+        }
+        .sidebar .list-group-item.active {
+            background-image: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3);
+            color: white; font-weight: 600; box-shadow: 0 2px 8px rgba(118, 18, 250, 0.3);
+        }
+        .sidebar .list-group-item.active i { color: white; }
+        .sidebar .list-group-item:hover:not(.active) { background-color: #f1f3f5; color: #212529; }
+
+        .content { flex-grow: 1; padding: 1.5rem 2rem; overflow-y: auto; }
+
+        .plot-section .card {
+            margin-bottom: 2rem; border: 1px solid #dee2e6;
+            border-radius: 0.5rem; box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,.05);
+        }
+        .bottom-color-border {
+            border-width: 2px; border-bottom-style: solid;
+            border-image: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3) 1;
+        }
+        .plot-item { padding: 0.5rem; }
+        .plotly-graph-div { width: 100% !important; height: auto !important; min-height: 300px; }
+        .plot-messages { font-size: 0.9em; margin-top: 0.5rem; padding: 0 1rem; }
+        .plot-messages .alert { margin-bottom: 0.5rem; font-size: 0.9em;}
+        code { font-size: 0.85em; padding: 0.15em 0.4em; background-color: #F1F1F9; border-radius: 3px; color: #7612fa; word-break: break-all; }
+        #correlation_matrix-section .plotly-graph-div { min-height: 400px; }
+        #time_series_analysis-section .row > .col-12:first-child .plotly-graph-div { min-height: 450px; }
+
+
+        #back-btn, #feature-btn{ border: none; border-radius: .5625rem !important; font-size: .875rem !important; color: #24223e !important; }
+        #back-btn:hover, #feature-btn:hover { background-color: #F1F1F9 !important; }
+        .container-border { padding: .3125rem; border: 1px solid #ceceea; border-radius: 14px;}
+        
+        /* --- Floating Brand Styles --- */
+        #floating-brand {
+            position: fixed;
+            bottom: 20px;
+            left: 25px;
+            z-index: 1040; /* Below modals, above most content */
+        }
+        #floating-brand a {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #343a40 !important;
+            opacity: 0.6;
+            transition: opacity 0.2s ease-in-out;
+        }
+        #floating-brand a:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 992px) {
+            body { padding-top: 5rem; }
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar {
+                width: 100%; height: auto; border-right: none;
+                border-bottom: 1px solid #e0e0e0; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                max-height: none;
+            }
+            .content { padding: 1.5rem; }
+        }
+        @media (max-width: 768px) {
+            .content { padding: 1rem; }
+            .sidebar h6 { font-size: 1rem; }
+            .sidebar .list-group-item { padding: 0.7rem 1rem; font-size: 0.9rem; }
+            .card-header { font-size: 1rem; padding: 0.6rem 1rem; }
+            .loading-overlay .progress-container { width: 90%; }
+        }
+
+
+        /* --- FLOATING REPORT ISSUE BUTTON --- */
+        .floating-report-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 1050;
+            display: flex;
+            align-items: center;
+            background-color: #7612fa; /* Start with brand purple */
+            color: #fff;
+            padding: 10px;
+            border-radius: 50px; /* Pill shape */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-decoration: none;
+            transition: all 0.3s ease-in-out;
+            overflow: hidden; /* Important for containing the expanding text */
+        }
+
+        .floating-report-btn .report-text {
+            max-width: 0;
+            opacity: 0;
+            white-space: nowrap;
+            transition: max-width 0.3s ease-in-out, opacity 0.2s ease-in-out 0.1s; /* Delay opacity transition */
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding-left: 0; /* No padding initially */
+        }
+
+        .floating-report-btn .report-icon {
+            font-size: 1.5rem;
+            line-height: 1;
+            margin-left: 5px; /* Give icon some space */
+        }
+
+        .floating-report-btn:hover {
+            background: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3);
+            box-shadow: 0 6px 20px rgba(118, 18, 250, 0.3);
+        }
+
+        .floating-report-btn:hover .report-text {
+            max-width: 150px; /* Expand to this width */
+            opacity: 1;
+            padding-left: 8px; /* Add space between text and icon */
+            padding-right: 5px;
+        }
+        .floating-report-btn:hover .report-icon {
+            margin-left: 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top" style="height: 3.5rem;">
+        <div class="container-fluid align-items-center">
+            <!-- Branding has been moved to a floating element at the bottom-left -->
+            <div class="ms-auto d-flex align-items-center">
+                <div class="container-border bg-white me-2">
+                    <a id="feature-btn" href="{{ url_for('show_features') }}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-binoculars"></i> View Features
+                    </a>
+                    <a id="back-btn" href="{{ url_for('clean_data_interface') }}" class="btn btn-outline-light btn-sm ms-2">
+                        <i class="bi bi-tools"></i> Back to Cleaning
+                    </a>
+                </div>
+                
+            </div>
+        </div>
+    </nav>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="progress-container">
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">Loading Visualizations...</div>
+            </div>
+            <p>Generating and rendering all plots. This might take a moment.</p>
+        </div>
+    </div>
+
+    <div class="main-container" id="main-content" style="display: none;">
+        <aside class="sidebar">
+            <h6><i class="bi bi-sliders2-vertical"></i> Plot Types</h6>
+            <div class="list-group list-group-flush" id="visualization-toggles">
+                <a class="list-group-item list-group-item-action active" href="#" data-target-id="all">
+                    <i class="bi bi-collection-fill"></i>All Visualizations
+                </a>
+
+                {% if plot_groups.distributions and (plot_groups.distributions.plots or plot_groups.distributions.messages) %}
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="distributions">
+                    <i class="bi bi-bar-chart-line-fill"></i>Distributions
+                </a>
+                {% endif %}
+
+                {% if plot_groups.categorical_analysis and (plot_groups.categorical_analysis.plots or plot_groups.categorical_analysis.messages) %}
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="categorical_analysis">
+                    <i class="bi bi-pie-chart-fill"></i>Categorical Analysis
+                </a>
+                {% endif %}
+
+                {% if plot_groups.correlation_matrix and (plot_groups.correlation_matrix.plots or plot_groups.correlation_matrix.messages) %}
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="correlation_matrix">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>Correlation & Heatmaps
+                </a>
+                {% endif %}
+
+                {% if plot_groups.relationships and (plot_groups.relationships.plots or plot_groups.relationships.messages) %}
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="relationships">
+                    <i class="bi bi-diagram-2-fill"></i>Bivariate Relationships
+                </a>
+                {% endif %}
+
+                {% if plot_groups.time_series_analysis and (plot_groups.time_series_analysis.plots or plot_groups.time_series_analysis.messages) %}
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="time_series_analysis">
+                    <i class="bi bi-graph-up-arrow"></i>Time Series
+                </a>
+                {% endif %}
+
+                {% if plot_groups.aggregated_summaries and (plot_groups.aggregated_summaries.plots or plot_groups.aggregated_summaries.messages) %}
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="aggregated_summaries">
+                    <i class="bi bi-table"></i>Aggregated Summaries
+                </a>
+                {% endif %}
+            </div>
+        </aside>
+
+        <main class="content">
+            <p class="text-muted mb-3"><small>Source: {{ source_info | default('N/A') }}</small></p>
+
+            {% if error_message %}
+                <div class="alert alert-danger" role="alert">
+                  <strong><i class="bi bi-exclamation-triangle-fill me-2"></i>Error Generating Visualizations:</strong> {{ error_message }}
+                </div>
+            {% endif %}
+
+            {% if plot_groups %}
+                {% for group_key, group_data in plot_groups.items() %}
+                     {% if group_data.plots or group_data.messages %}
+                        <div class="plot-section" id="{{ group_key }}-section">
+                            <div class="card mb-4">
+                                <div class="card-header bottom-color-border">{{ group_data.title | default(group_key | replace('_', ' ') | capitalize) }}</div>
+                                <div class="card-body">
+                                    {% if group_data.messages %}
+                                        <div class="plot-messages text-muted">
+                                        {% for msg in group_data.messages %}
+                                            {% if msg.startswith('<div class="alert') %} {{ msg | safe }}
+                                            {% else %} <p class="mb-1">{{ msg | safe }}</p>
+                                            {% endif %}
+                                        {% endfor %}
+                                        </div>
+                                        {% if group_data.plots %}<hr class="my-3">{% endif %}
+                                    {% endif %}
+
+                                    {% if group_data.plots %}
+                                        {# Specific layout for Time Series section #}
+                                        {% if group_key == 'time_series_analysis' %}
+                                            <div class="row g-3 align-items-stretch"> {# Outer row for TS plots #}
+                                                {% for plot_html in group_data.plots %}
+                                                    {% if loop.first %} {# Main combined plot #}
+                                                        <div class="col-12 d-flex"> {# Full width for the first plot #}
+                                                            <div class="plot-item border rounded w-100">
+                                                                {{ plot_html | safe }}
+                                                            </div>
+                                                        </div>
+                                                    {% else %} {# Individual smaller plots #}
+                                                        <div class="col-12 col-lg-6 d-flex"> {# Two per row on large screens #}
+                                                            <div class="plot-item border rounded w-100">
+                                                                {{ plot_html | safe }}
+                                                            </div>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {# Default grid layout for other sections #}
+                                            {% set grid_classes = "row-cols-1 row-cols-lg-2 row-cols-xl-2 row-cols-xxl-2 g-3 align-items-stretch" %}
+                                            {% if group_key == 'correlation_matrix' %}
+                                                {% set grid_classes = "row-cols-1 row-cols-xl-1 g-3 align-items-stretch" %}
+                                            {% endif %}
+                                            <div class="row {{ grid_classes }}">
+                                                {% for plot_html in group_data.plots %}
+                                                    <div class="col d-flex">
+                                                        <div class="plot-item border rounded w-100">
+                                                            {{ plot_html | safe }}
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    {% elif not group_data.messages %}
+                                         <p class="text-muted mb-0">No visualizations generated for this category.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                     {% endif %}
+                {% endfor %}
+            {% elif not error_message %}
+                 <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i>No visualizations could be generated. Ensure data is loaded and contains suitable columns.
+                 </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <!-- Floating Brand in Bottom Left Corner -->
+    <div id="floating-brand">
+        <a href="{{ url_for('index') }}" class="text-decoration-none">
+             <img src="{{ url_for('static', filename='img/logomain.png') }}" alt="DataWarp Logo" style="height: 20px; vertical-align: text-bottom; margin-right: 5px;">
+             DataWarp
+        </a>
+    </div>
+
+
+
+    <!-- Floating Report an Issue Button -->
+    <a href="https://tally.so/r/w7gWkR" target="_blank" rel="noopener noreferrer" class="floating-report-btn">
+        <span class="report-text">Report an issue</span>
+        <i class="bi bi-bug-fill report-icon"></i>
+    </a>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const mainContent = document.getElementById('main-content');
+        const sidebarToggles = document.querySelectorAll('#visualization-toggles .list-group-item');
+        const plotSections = document.querySelectorAll('.plot-section');
+        const contentArea = document.querySelector('.content');
+
+        function resizeAllPlotlyCharts() {
+            if (typeof Plotly !== 'undefined') {
+                const allPlotlyDivs = document.querySelectorAll('.plotly-graph-div');
+                allPlotlyDivs.forEach(div => {
+                    try { Plotly.Plots.resize(div); } catch (e) { /* console.warn("ResizeAll error", e) */ }
+                });
+            }
+        }
+        
+        function resizePlotlyChartsInSection(section) {
+            if (typeof Plotly !== 'undefined') {
+                 section.querySelectorAll('.plotly-graph-div').forEach(div => {
+                    try { Plotly.Plots.resize(div); } catch (e) { /* console.warn("ResizeSection error", e) */ }
+                });
+            }
+        }
+
+        window.onload = function() {
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+            if (mainContent) mainContent.style.display = 'flex';
+            const initialActiveToggle = document.querySelector('#visualization-toggles .list-group-item.active');
+            if (initialActiveToggle) {
+                initialActiveToggle.click(); 
+            } else if (sidebarToggles.length > 0) {
+                sidebarToggles[0].click();
+            } else { 
+                resizeAllPlotlyCharts(); 
+            }
+        };
+        
+        let fallbackTimeout = setTimeout(() => {
+            if (loadingOverlay && loadingOverlay.style.display !== 'none') {
+                loadingOverlay.style.display = 'none';
+                 if (mainContent && mainContent.style.display === 'none') {
+                    mainContent.style.display = 'flex';
+                    const initialActiveToggle = document.querySelector('#visualization-toggles .list-group-item.active');
+                    if (initialActiveToggle && !initialActiveToggle.classList.contains('js-clicked-initially')) {
+                         initialActiveToggle.click();
+                         initialActiveToggle.classList.add('js-clicked-initially');
+                    } else if (sidebarToggles.length > 0 && !sidebarToggles[0].classList.contains('js-clicked-initially')) {
+                         sidebarToggles[0].click();
+                         sidebarToggles[0].classList.add('js-clicked-initially');
+                    } else {
+                        resizeAllPlotlyCharts();
+                    }
+                }
+            }
+        }, 4000);
+
+        sidebarToggles.forEach(toggle => {
+            toggle.addEventListener('click', function (event) {
+                event.preventDefault();
+                clearTimeout(fallbackTimeout);
+
+                sidebarToggles.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                this.classList.add('js-clicked-initially');
+
+                const targetId = this.getAttribute('data-target-id');
+                let anySectionMadeVisible = false;
+
+                plotSections.forEach(section => {
+                    let shouldBeVisible = (targetId === 'all') || (section.id === targetId + '-section');
+                    
+                    if (shouldBeVisible) {
+                        if (section.style.display !== 'block') {
+                           section.style.display = 'block';
+                           resizePlotlyChartsInSection(section);
+                           anySectionMadeVisible = true;
+                        } else if (targetId === 'all') { 
+                            resizePlotlyChartsInSection(section); 
+                        }
+                    } else {
+                        section.style.display = 'none';
+                    }
+                });
+                
+                if (targetId === 'all' && !anySectionMadeVisible) {
+                    resizeAllPlotlyCharts();
+                }
+
+                if (contentArea) { contentArea.scrollTop = 0; }
+            });
+        });
+    });
+    </script>
+</body>
+</html>

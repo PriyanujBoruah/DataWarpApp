@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Subscription Plans - DataWarp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            padding-top: 5rem; /* For fixed navbar */
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+            background-color: #f9f9f9; /* Very light gray background */
+            color: #0a192f; /* Dark blue/black for text */
+        }
+
+        /* Navbar Styles from clean_data.html (assuming consistency) */
+        .navbar {
+            border-width: 2px;
+            border-bottom-style: solid;
+            border-image: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3) 1;
+            background-color: #fff !important;
+        }
+        .navbar-brand {
+            font-size: 1.625rem;
+            font-weight: 900;
+            color: #000 !important;
+        }
+        .navbar .nav-link {
+            color: #212529 !important;
+            font-weight: 500;
+        }
+        .navbar .nav-link:hover {
+            color: #7612fa !important;
+        }
+        .user-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1rem; cursor: pointer;
+            border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        .user-avatar:hover { opacity: 0.9; }
+        .dropdown-menu-end { right: 0; left: auto; }
+        .dropdown-header-text { color: #212529; }
+        .dropdown-item:active { background-color: #7612fa; color: #fff !important; }
+
+        /* Subscription Page Specific Styles */
+        .plans-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .plans-header .subtitle {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #555e6d; /* Muted text for "PLANS" */
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        .plans-header .title {
+            font-size: 2.5rem; /* Large title */
+            font-weight: 700;
+            color: #0a192f; /* Main title color */
+            margin-bottom: 1.5rem;
+        }
+
+        .billing-toggle {
+            display: inline-flex;
+            background-color: #e9ecef; /* Light grey background for toggle */
+            border-radius: 20px; /* Rounded pill shape */
+            padding: 0.3rem;
+            margin-bottom: 3rem;
+        }
+        .billing-toggle button {
+            background-color: transparent;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 18px; /* Rounded inner buttons */
+            font-weight: 600;
+            color: #555e6d; /* Default button text color */
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .billing-toggle button.active {
+            background-color: #0a192f; /* Dark active button */
+            color: #ffffff; /* White text for active button */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .plans-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+        }
+        .plan-card {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0; /* Lighter border */
+            border-radius: 12px; /* Rounded corners for cards */
+            padding: 2rem;
+            width: 100%;
+            max-width: 360px; /* Max width for cards */
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        .plan-card.current-plan {
+            border-color: #7612fa; /* Highlight current plan */
+            box-shadow: 0 0 0 3px rgba(118, 18, 250, 0.3);
+        }
+
+        .plan-card h3 { /* Plan name */
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0a192f;
+            margin-bottom: 0.5rem;
+        }
+        .plan-price {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #0a192f;
+            margin-bottom: 0.25rem;
+        }
+        .plan-price .currency {
+            font-size: 1.8rem; /* Smaller currency symbol */
+            font-weight: 600;
+            vertical-align: super;
+            margin-right: 0.1em;
+        }
+        .plan-frequency {
+            font-size: 0.9rem;
+            color: #555e6d;
+            margin-bottom: 1.5rem;
+        }
+        .plan-description { /* "Subscription automatically renews..." */
+            font-size: 0.8rem;
+            color: #555e6d;
+            margin-bottom: 1.5rem;
+        }
+        .plan-description a {
+            color: #7612fa;
+            font-weight: 500;
+        }
+
+        .plan-buttons {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+        .plan-buttons .btn {
+            flex-grow: 1;
+            font-weight: 600;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .btn-dark-custom { /* For "Learn more" or "Choose Plan" */
+            background-color: #0a192f;
+            color: #ffffff;
+            border: 1px solid #0a192f;
+        }
+        .btn-dark-custom:hover {
+            background-color: #1d2f4c;
+            border-color: #1d2f4c;
+        }
+        .btn-outline-dark-custom { /* For "See plans and pricing" or "Current Plan" */
+            background-color: transparent;
+            color: #0a192f;
+            border: 1px solid #0a192f;
+        }
+        .btn-outline-dark-custom:hover {
+            background-color: #0a192f;
+            color: #ffffff;
+        }
+         .btn-current-plan {
+            background-color: #e9ecef;
+            color: #7612fa;
+            border: 1px solid #7612fa;
+            font-weight: 600;
+        }
+        .btn-current-plan:hover {
+            background-color: #d3c0f5;
+        }
+
+
+        .plan-features {
+            list-style: none;
+            padding-left: 0;
+            margin-top: auto; /* Pushes features to bottom if card height varies */
+        }
+        .plan-features li {
+            font-size: 0.9rem;
+            color: #344054; /* Slightly softer feature text */
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: flex-start;
+        }
+        .plan-features li .bi-check-circle-fill {
+            color: #7612fa; /* Theme color for checkmarks */
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+            margin-top: 0.1em;
+        }
+
+        /* Feature Comparison Table Styles */
+        .feature-comparison-outer {
+            margin-top: 4rem; /* Space above the comparison section */
+        }
+        .feature-comparison-outer .comparison-all-headers-row .feature-category-header-text,
+        .feature-comparison-outer .comparison-all-headers-row .plan-name-header-text {
+            color: #0a192f;    /* Dark blue/black text */
+            font-size: 1.1rem; /* Standard header size */
+            font-weight: 600;  /* Bold */
+            margin-bottom: 0.5rem; /* Space before content/lists start */
+            padding-top: 0.5rem; 
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center; /* Vertically center text */
+             border-bottom: 1px solid #dee2e6; /* Separator below headers */
+        }
+        .feature-comparison-outer .comparison-all-headers-row .feature-category-header-text {
+             padding-left: 0.75rem; /* Match list item padding */
+        }
+
+        .feature-comparison-outer .comparison-all-headers-row .plan-name-header-text {
+            justify-content: center; /* Center plan names */
+        }
+
+        .feature-comparison-outer .feature-names-list-col,
+        .feature-comparison-outer .plan-values-item-col {
+            background-color: #ffffff; 
+        }
+         .feature-comparison-outer .plan-values-item-col {
+            background-color: #f8f9fa; /* Light gray for plan value columns, matching screenshot */
+        }
+
+
+        .feature-comparison-outer .feature-list-names li,
+        .feature-comparison-outer .feature-list-values li {
+            padding: 0.85rem 0.75rem; 
+            min-height: 58px;         
+            display: flex;
+            align-items: center;
+            color: #344054;          
+            font-size: 0.9rem;        
+            border-bottom: 1px solid #e9ecef; 
+        }
+
+        .feature-comparison-outer .feature-list-names li:last-child,
+        .feature-comparison-outer .feature-list-values li:last-child {
+            border-bottom: none; 
+        }
+
+        .feature-comparison-outer .feature-list-names li {
+            justify-content: flex-start; 
+            font-weight: 500;            
+            color: #0a192f;              
+            cursor: help; /* Indicate interactivity for tooltip */
+            border-bottom: 1px dotted #0a192f; /* Underline like in image for features with tooltips */
+        }
+        .feature-comparison-outer .feature-list-names li:hover {
+            border-bottom-style: solid;
+        }
+
+
+        .feature-comparison-outer .feature-list-values li {
+            justify-content: center; 
+        }
+        
+        .feature-comparison-outer .plan-values-item-col + .plan-values-item-col { 
+            border-left: 1px solid #dee2e6; 
+        }
+
+        .feature-comparison-outer .custom-check-mark {
+            color: #00823F; 
+            font-size: 1.4rem;     
+            font-weight: 700;  
+        }
+        .feature-comparison-outer .feature-names-list-col {
+            padding-right: 0; 
+        }
+        .feature-comparison-outer .plan-values-wrapper-col {
+            padding-left: 0;
+        }
+        
+        .feature-comparison-outer .comparison-all-content-row {
+           border: 1px solid #dee2e6; 
+           border-top: none; 
+           border-radius: 0 0 8px 8px; 
+           overflow: hidden; 
+        }
+         .feature-comparison-outer .comparison-all-headers-row {
+             border: 1px solid #dee2e6;
+             border-bottom: none; 
+             border-radius: 8px 8px 0 0;
+             margin-left: calc(var(--bs-gutter-x) * -.5); 
+             margin-right: calc(var(--bs-gutter-x) * -.5);
+             padding-left: calc(var(--bs-gutter-x) * .5);
+             padding-right: calc(var(--bs-gutter-x) * .5);
+         }
+          .feature-comparison-outer .comparison-all-content-row {
+             margin-left: calc(var(--bs-gutter-x) * -.5);
+             margin-right: calc(var(--bs-gutter-x) * -.5);
+         }
+
+        /* Custom Tooltip Styles */
+        .tooltip-custom {
+            --bs-tooltip-bg: #282828;
+            --bs-tooltip-color: #ffffff;
+            --bs-tooltip-border-radius: 0.5rem; /* 8px */
+            --bs-tooltip-padding-y: 0.625rem; /* 10px */
+            --bs-tooltip-padding-x: 0.9375rem; /* 15px */
+            --bs-tooltip-font-size: 0.875rem;
+            --bs-tooltip-max-width: 250px; /* Max width for better readability */
+        }
+        /* Arrow color for top placement */
+        .tooltip-custom .tooltip-arrow::before {
+            border-top-color: var(--bs-tooltip-bg);
+        }
+        /* Arrow color for bottom placement */
+        .bs-tooltip-bottom .tooltip-arrow::before, .bs-tooltip-auto[data-popper-placement^="bottom"] .tooltip-arrow::before {
+             border-bottom-color: var(--bs-tooltip-bg);
+        }
+        /* Arrow color for left placement */
+        .bs-tooltip-start .tooltip-arrow::before, .bs-tooltip-auto[data-popper-placement^="left"] .tooltip-arrow::before {
+            border-left-color: var(--bs-tooltip-bg);
+        }
+        /* Arrow color for right placement */
+        .bs-tooltip-end .tooltip-arrow::before, .bs-tooltip-auto[data-popper-placement^="right"] .tooltip-arrow::before {
+            border-right-color: var(--bs-tooltip-bg);
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Navbar based on clean_data.html -->
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top">
+        <div class="container-fluid align-items-center">
+            <img src="{{ url_for('static', filename='img/logomain.png') }}" class="logo-img me-2 ms-3" alt="DataWarp Logo" style="height: 25px;">
+            <a class="navbar-brand" href="{{ url_for('index') }}">DataWarp</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavSubs" aria-controls="navbarNavSubs" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon" style="background-image: url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0, 0, 0, 0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e\");"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNavSubs">
+                <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                     {% if current_user %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">Home/Upload</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('clean_data_interface') }}">Clean Data</a>
+                    </li>
+                     {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link" href="#" id="userDropdownSubs" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="user-avatar">
+                                    {{ current_user_display_name[0]|upper if current_user_display_name else 'U' }}
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdownSubs">
+                                <li>
+                                    <div class="px-3 py-2 text-center">
+                                        <div class="user-avatar mx-auto mb-2" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                                            {{ current_user_display_name[0]|upper if current_user_display_name else 'U' }}
+                                        </div>
+                                        <h6 class="mb-0 dropdown-header-text">{{ current_user_display_name }}</h6>
+                                        {% if current_user.email %}
+                                        <small class="text-muted">{{ current_user.email }}</small>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('account') }}"><i class="bi bi-gear-fill me-2"></i>Account Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="plans-header">
+            <p class="subtitle">PLANS</p>
+            <h1 class="title">Find the plan that's right for you</h1>
+            <div class="billing-toggle">
+                <button id="toggle-yearly" type="button">Yearly <span class="badge bg-success ms-1" style="font-size:0.7em; vertical-align: middle;">Save ~20%</span></button>
+                <button id="toggle-monthly" type="button" class="active">Monthly</button>
+            </div>
+        </div>
+
+        <div class="plans-container">
+            {% for plan in plans %}
+            <div class="plan-card {% if plan.id == current_subscription_id %}current-plan{% endif %}" data-plan-id="{{ plan.id }}">
+                <h3>{{ plan.name }}</h3>
+                {% if plan.price_display %}
+                    <div class="plan-price">{{ plan.price_display }}</div>
+                {% else %}
+                    <div class="plan-price">
+                        <span class="currency">{{ plan.currency_symbol }}</span><span class="price-value" data-monthly="{{ plan.monthly_price_usd }}" data-yearly="{{ plan.yearly_price_usd }}">{{ plan.monthly_price_usd }}</span>.00
+                    </div>
+                    <p class="plan-frequency" data-monthly-text="/month" data-yearly-text="/year">/month</p>
+                {% endif %}
+
+                {% if plan.id != 'basic' %}
+                <p class="plan-description">Subscription automatically renews unless canceled. <a href="#">See terms.</a></p>
+                {% else %}
+                <p class="plan-description">Get started with core features for free.</p>
+                {% endif %}
+                
+                <div class="plan-buttons">
+                    {% if plan.id == current_subscription_id %}
+                        {# This card is the user's current active plan #}
+                        <button type="button" class="btn btn-current-plan" disabled><i class="bi bi-check-lg me-1"></i>Current Plan</button>
+                    
+                    {% elif plan.id == 'basic' and current_subscription_id == 'pro' %}
+                        {# This is the Basic plan card, AND the user's current plan is Pro #}
+                        {# Only show "Learn more" for the Basic plan in this specific scenario #}
+                        <a href="{{ plan.buttons.learn_more_link }}" class="btn btn-outline-dark-custom w-100">Learn more</a>
+                    
+                    {% else %}
+                        {# This card is NOT the current plan, OR (it's the Basic plan AND Pro is NOT active) #}
+                        {# Default behavior: show "Choose Plan" and "Learn more" #}
+                        <button type="button" class="btn btn-dark-custom choose-plan-btn" data-plan-id="{{ plan.id }}" data-choose-link="{{ plan.buttons.choose_link }}">
+                            Choose {{ plan.name.split(' ')[-1] }}
+                        </button>
+                        <a href="{{ url_for('pro_plan_details') if plan.id == 'pro' else (url_for('plus_plan_details') if plan.id == 'plus' else plan.buttons.learn_more_link) }}" class="btn btn-outline-dark-custom">Learn more</a>
+                    {% endif %}
+                </div>
+
+                <ul class="plan-features">
+                    {% for feature in plan.features %}
+                    <li><i class="bi bi-check-circle-fill"></i>{{ feature }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- START: Feature Comparison Section -->
+        <div class="feature-comparison-outer">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 col-xl-9"> 
+                    <h2 class="text-center fw-bold mb-4" style="color: #0a192f;">Compare features across subscriptions</h2>
+        
+                    <div class="row comparison-all-headers-row">
+                        <div class="col-5 col-md-5"> 
+                            <h5 class="fw-semibold feature-category-header-text">Productivity and collaboration</h5>
+                        </div>
+                        <div class="col-7 col-md-7"> 
+                            <div class="row">
+                                <div class="col-6">
+                                    <h5 class="text-center fw-semibold plan-name-header-text">DataWarp Free</h5>
+                                </div>
+                                <div class="col-6">
+                                    <h5 class="text-center fw-semibold plan-name-header-text">DataWarp Pro</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <div class="row comparison-all-content-row">
+                        <div class="col-5 col-md-5 feature-names-list-col"> 
+                            <ul class="list-unstyled feature-list-names ps-0 mb-0">
+                                <li data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-custom" title="Access your team's message and file history. Free plan offers 90-day access, Pro plan offers unlimited.">Message and file history</li>
+                                <li data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-custom" title="Take a break from typing and start a live audio conversation (with video, screen sharing, a message thread and fun reactions/effects) in a channel or direct message. Brainstorm, make decisions or just catch up – all at the flip of a switch. Free plan is 1:1 only, Pro supports group huddles.">Slack huddles</li>
+                                <li data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-custom" title="Record and share audio and video clips directly in Slack to communicate ideas and updates quickly. Available in all plans, but Free plan might have limitations on storage or length.">Audio and video clips</li>
+                                <li data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-custom" title="Collaborate with people outside your organization. Free plan allows 1:1 external DMs, Pro plan offers more extensive external collaboration features.">Work with external people</li>
+                                <li data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-custom" title="Create and share rich, collaborative documents directly within Slack. Free plan allows usage in Channels & DMs only, Pro plan offers full functionality.">Slack canvases</li>
+                                <li data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-custom" title="Track tasks, projects, and to-dos with simple, shareable lists within Slack. Available in Pro plan and above.">Slack lists</li>
+                                <li data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-custom" title="Use pre-built or create custom templates for common workflows and messages. Pro plan allows user-created templates.">Templates</li>
+                                <li data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-custom" title="Organise your sidebar with custom sections to keep channels and DMs tidy and focused. Available in Pro plan and above.">Customisable sections</li>
+                            </ul>
+                        </div>
+        
+                        <div class="col-7 col-md-7 plan-values-wrapper-col"> 
+                            <div class="row h-100">
+                                <div class="col-6 plan-values-item-col">
+                                    <ul class="list-unstyled text-center feature-list-values ps-0 mb-0">
+                                        <li>90-day access</li>
+                                        <li>1:1 only</li>
+                                        <li><i class="bi bi-check-lg custom-check-mark"></i></li>
+                                        <li>1:1 only</li>
+                                        <li>Channels and DMs only</li>
+                                        <li>—</li>
+                                        <li>—</li>
+                                        <li>—</li>
+                                    </ul>
+                                </div>
+        
+                                <div class="col-6 plan-values-item-col">
+                                    <ul class="list-unstyled text-center feature-list-values ps-0 mb-0">
+                                        <li><i class="bi bi-check-lg custom-check-mark"></i></li>
+                                        <li><i class="bi bi-check-lg custom-check-mark"></i></li>
+                                        <li><i class="bi bi-check-lg custom-check-mark"></i></li>
+                                        <li><i class="bi bi-check-lg custom-check-mark"></i></li>
+                                        <li><i class="bi bi-check-lg custom-check-mark"></i></li>
+                                        <li><i class="bi bi-check-lg custom-check-mark"></i></li>
+                                        <li>User-created</li>
+                                        <li><i class="bi bi-check-lg custom-check-mark"></i></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END: Feature Comparison Section -->
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const yearlyBtn = document.getElementById('toggle-yearly');
+            const monthlyBtn = document.getElementById('toggle-monthly');
+            const planCards = document.querySelectorAll('.plan-card');
+
+            function updatePricing(isYearly) {
+                planCards.forEach(card => {
+                    const priceValueEl = card.querySelector('.price-value');
+                    const frequencyEl = card.querySelector('.plan-frequency');
+                    
+                    if (priceValueEl && frequencyEl) {
+                        const monthlyPrice = priceValueEl.dataset.monthly;
+                        const yearlyPrice = priceValueEl.dataset.yearly;
+                        
+                        if (isYearly) {
+                            priceValueEl.textContent = yearlyPrice;
+                            frequencyEl.textContent = frequencyEl.dataset.yearlyText;
+                        } else {
+                            priceValueEl.textContent = monthlyPrice;
+                            frequencyEl.textContent = frequencyEl.dataset.monthlyText;
+                        }
+                    }
+                });
+
+                if (isYearly) {
+                    yearlyBtn.classList.add('active');
+                    monthlyBtn.classList.remove('active');
+                } else {
+                    monthlyBtn.classList.add('active');
+                    yearlyBtn.classList.remove('active');
+                }
+                localStorage.setItem('billingCycle', isYearly ? 'yearly' : 'monthly');
+            }
+
+            yearlyBtn.addEventListener('click', () => updatePricing(true));
+            monthlyBtn.addEventListener('click', () => updatePricing(false));
+
+            const savedCycle = localStorage.getItem('billingCycle');
+            if (savedCycle === 'yearly') {
+                updatePricing(true);
+            } else {
+                updatePricing(false); 
+            }
+
+            document.querySelectorAll('.choose-plan-btn').forEach(button => {
+                button.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const planId = this.dataset.planId;
+                    const chooseLink = this.dataset.chooseLink;
+                    alert(`You chose the ${planId} plan! Link: ${chooseLink} (This is a placeholder, actual subscription logic needs to be implemented.)`);
+                });
+            });
+
+            // Initialize Bootstrap Tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+              return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        });
+    </script>
+</body>
+</html>

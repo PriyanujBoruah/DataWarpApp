@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DataWarp - Start</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            padding-top: 2rem;
+            padding-bottom: 5rem;
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+            background-color: #f8f9fa;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin-top: 30px; 
+        }
+        .alert { margin-top: 15px; }
+        
+        .card {
+            border-radius: 18px; 
+            border: 1px solid #e0e0e0; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: box-shadow 0.2s ease-in-out;
+            height: 100%; 
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Important for the child elements with blur */
+        }
+        /* Base hover for ALL cards */
+        .card:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+        }
+        /* Specific gradient hover for interactive cards ONLY */
+        .interactive-gradient-card:hover {
+            background: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3);
+            background-size: 250% 250%;
+            animation: gradientAnimationInteractiveCard 15s ease infinite;
+            border-color: transparent;
+        }
+
+        /* Card header now has a glass effect */
+        .card-header { 
+            font-weight: 600; 
+            font-size: 1.1rem; 
+            padding: 1rem 1.25rem; 
+            border-top-left-radius: 18px; 
+            border-top-right-radius: 18px;
+            
+            /* Glassmorphism Base Effect */
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            color: #333;
+            transition: color 0.5s ease, border-color 0.5s ease, background 0.5s ease;
+        }
+        
+        /* Update header appearance on interactive card hover */
+        .interactive-gradient-card:hover .card-header {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* User Avatar & Relocated Dropdown Styles */
+        #user-dropdown-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1050;
+        }
+        .user-avatar {
+            width: 42px; height: 42px; border-radius: 50%;
+            background: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1.2rem; cursor: pointer;
+            border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            transition: transform 0.2s ease-in-out;
+        }
+        .user-avatar:hover { 
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+        .dropdown-header-text { color: #212529; }
+        .dropdown-item:active { background-color: #7612fa; color: #fff !important;}
+
+        /* --- New Branding Footer Styles --- */
+        #branding-footer {
+            position: fixed;
+            bottom: 20px;
+            right: 25px;
+            z-index: 1050;
+        }
+        #branding-footer a {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            opacity: 0.6;
+            transition: opacity 0.2s ease-in-out;
+        }
+        #branding-footer a:hover {
+            opacity: 1;
+        }
+
+
+        /* --- Gradient Animation Keyframes --- */
+        @keyframes gradientAnimationInteractiveCard {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* === NEW CSS FOR REFERRAL MESSAGES === */
+        /* --- Keyframe Animation for Gradient --- */
+        @keyframes animated-gradient-background {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Styles for the Referral Info in Dropdown --- */
+        /* Style for the static count/progress bar part */
+        .referral-info-item {
+            font-size: 0.8rem;
+            color: #495057;
+            cursor: default;
+        }
+        .referral-info-item .progress {
+            height: 6px;
+            background-color: #e9ecef;
+        }
+        .referral-info-item .progress-bar {
+            background: linear-gradient(100deg, #40ddff, #7612fa, #fa12e3);
+        }
+
+        /* Base style for the special animated message items */
+        .dropdown-item-special-progress, .dropdown-item-special-complete {
+            white-space: normal; /* Allow text to wrap */
+            padding: 0.6rem 1rem;
+            border-radius: 0.375rem; /* Rounded corners */
+            font-size: 0.8rem;
+            text-align: center;
+            line-height: 1.4;
+            cursor: default; /* It's not a link */
+            background-size: 300% 300%;
+            animation: animated-gradient-background 15s ease infinite;
+            /* Prevent Bootstrap's default hover effects */
+            transition: none; 
+        }
+        .dropdown-item-special-progress:hover, 
+        .dropdown-item-special-complete:hover {
+            background-color: transparent; /* Keep animated background on hover */
+        }
+
+        /* Specific style for the "in-progress" message */
+        .dropdown-item-special-progress {
+            background-image: linear-gradient(120deg, #fce4ec, #ede7f6, #e0f7fa, #fce4ec);
+            color: #424242;
+        }
+
+        /* Specific style for the "complete" message */
+        .dropdown-item-special-complete {
+            background-image: linear-gradient(120deg, #c8e6c9, #bbdefb, #d1c4e9, #c8e6c9);
+            color: #1a237e;
+            font-weight: 600;
+        }
+        /* === END NEW CSS === */
+
+
+        /* --- Styles for Interactive Card Bodies (Upload and Connect DB) --- */
+        .interactive-card-body {
+            padding: 0 !important; 
+            border-bottom-left-radius: 18px; 
+            border-bottom-right-radius: 18px;
+            transition: background 0.5s ease, color 0.5s ease; 
+            background-color: #fff; 
+            color: #212529; 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        /* on hover, the body becomes transparent to show the card's new gradient */
+        .interactive-gradient-card:hover .interactive-card-body {
+            background-color: transparent;
+            color: #fff; 
+        }
+        .interactive-gradient-card:hover .interactive-card-body .file-upload-box .upload-icon-circle { border-color: #fff; }
+        .interactive-gradient-card:hover .interactive-card-body .file-upload-box .upload-icon-circle i { color: #fff; }
+        
+        /* Text changes color on hover, no longer fades out */
+        .interactive-gradient-card:hover .interactive-card-body .file-upload-box .upload-text {
+            color: #f0f0f0;
+        }
+        
+        /* Button fades in on hover */
+        .interactive-gradient-card:hover .interactive-card-body .file-upload-box .btn-choose-file {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px); /* For Safari */
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            color: #fff !important;
+        }
+         .interactive-gradient-card:hover .interactive-card-body .file-upload-box .btn-choose-file:hover {
+            /* Brighter glass on hover */
+            background: rgba(255, 255, 255, 0.25) !important;
+            border-color: rgba(255, 255, 255, 0.5) !important;
+            transform: translateY(-2px);
+        }
+        .file-upload-box { 
+            padding: 2.5rem 2rem; text-align: center; width: 100%;
+            min-height: 280px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            position: relative; cursor: pointer; flex-grow: 1;
+        }
+        .file-upload-box .upload-content-wrapper { z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .file-upload-box .upload-icon-circle {
+            width: 70px; height: 70px; border-radius: 50%;
+            border: 2px solid #7612fa; 
+            display: inline-flex; align-items: center; justify-content: center;
+            /* No margin-bottom needed as text will provide its own spacing */
+            transition: all 0.3s ease;
+        }
+        .file-upload-box .upload-icon-circle i { font-size: 2.5rem; color: #7612fa; transition: color 0.5s ease; }
+        
+        /* UPDATED: Text is now part of the normal document flow */
+        .file-upload-box .upload-text { 
+            color: #5a5a5a; 
+            margin-top: 1rem; /* Space below the icon */
+            font-size: 1rem; 
+            font-weight: 500; 
+            transition: color 0.5s ease;
+        }
+        
+        /* Button is hidden by default */
+        .file-upload-box .btn-choose-file {
+            color: #333 !important;
+            padding: 0.65rem 1.8rem;
+            font-weight: 600;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            
+            margin-top: 1.25rem; /* Space from the text above */
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(10px);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .file-upload-box input[type="file"] { display: none; }
+        .file-upload-box .bg-icon { position: absolute; font-size: 40px; color: #777; opacity: 0.07; z-index: 0; pointer-events: none; }
+        .file-upload-box .icon-ai  { top: 25px; left: calc(50% - 140px); font-size: 42px; transform: rotate(-12deg); }
+        .file-upload-box .icon-psd { top: 30px; left: calc(50% + 100px); font-size: 38px; transform: rotate(15deg); }
+        .file-upload-box .icon-gif { top: calc(50% - 10px); left: 40px; font-size: 45px; transform: rotate(8deg); opacity: 0.06;}
+        .file-upload-box .icon-jpg { top: calc(50% + 20px); right: 35px; font-size: 48px; transform: rotate(-10deg); opacity: 0.08;}
+        .file-upload-box .icon-mp3 { bottom: 30px; left: calc(50% - 90px); font-size: 40px; transform: rotate(10deg); }
+        .file-upload-box .icon-png { bottom: 25px; right: calc(50% - 150px); font-size: 42px; transform: rotate(5deg); opacity: 0.07;}
+        .file-upload-box.dragging { background-color: #e9f2ff; }
+         .interactive-gradient-card:hover .interactive-card-body .file-upload-box.dragging {
+             background: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3);
+             background-size: 250% 250%;
+             animation: gradientAnimationInteractiveCard 15s ease infinite;
+             border: 2px dashed rgba(255,255,255,0.5); 
+        }
+
+        /* --- Styles for Saved Session List Items --- */
+        .saved-list { max-height: 200px; overflow-y: auto; }
+        .list-group-item {
+            margin-top: 0.25rem; 
+            margin-bottom: 0.25rem;
+            border-radius: 14px !important; 
+            border: 1px solid #f1f1f9 !important; 
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; 
+            background-color: #fff; 
+            color: #212529; 
+            position: relative; 
+            overflow: hidden; 
+        }
+        .list-group-item:hover {
+            background: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3);
+            background-size: 250% 250%;
+            animation: gradientAnimationInteractiveCard 15s ease infinite;
+            color: #fff !important; 
+            border-color: transparent !important; 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+        }
+        .list-group-item:hover a.filename-link,
+        .list-group-item:hover a.filename-link i.bi {
+            color: #fff !important; 
+        }
+        .list-group-item:hover .btn-download-session {
+            color: #f0f0f0 !important; 
+            background-color: rgba(255, 255, 255, 0.1) !important; 
+        }
+        .list-group-item:hover .btn-download-session:hover {
+            color: #fff !important;
+            background-color: rgba(255, 255, 255, 0.2) !important;
+        }
+        .list-group-item:hover .btn-remove-session {
+            color: #ffdddd !important; 
+            background-color: rgba(255, 0, 0, 0.1) !important; 
+        }
+        .list-group-item:hover .btn-remove-session:hover {
+            color: #fff !important;
+            background-color: rgba(220, 53, 69, 0.5) !important; 
+        }
+        .list-group-item:hover .btn-download-session i,
+        .list-group-item:hover .btn-remove-session i {
+            color: inherit !important; 
+        }
+        .list-group-item .btn-remove-session { padding: 0.1rem 0.4rem; font-size: 0.8rem; line-height: 1; color: var(--bs-danger); transition: background-color 0.2s ease, color 0.2s ease;}
+        .list-group-item .btn-remove-session:hover { color: var(--bs-white); background-color: var(--bs-danger); }
+        .list-group-item .btn-download-session { padding: 0.1rem 0.4rem; font-size: 0.9rem; line-height: 1; color: var(--bs-secondary); transition: background-color 0.2s ease, color 0.2s ease;}
+        .list-group-item .btn-download-session i.bi-filetype-csv { font-size: 1.1rem; }
+        .list-group-item .btn-download-session:hover { color: var(--bs-primary); background-color: #e9ecef; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category if category in ['success', 'info', 'warning', 'danger'] else 'secondary' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="row g-4 mt-4">
+            <div class="col-md-6 d-flex">
+                <!-- ADDED interactive-gradient-card class -->
+                <div class="card interactive-gradient-card mb-4 w-100">
+                    <div class="card-header">
+                        Upload New File (CSV, TSV, XLSX)
+                    </div>
+                    <div class="card-body interactive-card-body"> 
+                        <form method="post" action="{{ url_for('upload_file') }}" enctype="multipart/form-data" id="fileUploadForm" style="width:100%; display:flex; flex-direction: column; flex-grow:1;">
+                            <div class="file-upload-box" id="fileUploadBox">
+                                <i class="bi bi-filetype-ai bg-icon icon-ai"></i>
+                                <i class="bi bi-filetype-key bg-icon icon-psd"></i> 
+                                <i class="bi bi-filetype-gif bg-icon icon-gif"></i>
+                                <i class="bi bi-filetype-jpg bg-icon icon-jpg"></i>
+                                <i class="bi bi-filetype-mp3 bg-icon icon-mp3"></i>
+                                <i class="bi bi-filetype-png bg-icon icon-png"></i>
+                                
+                                <div class="upload-content-wrapper">
+                                    <div class="upload-icon-circle">
+                                        <i class="bi bi-cloud-arrow-up-fill"></i>
+                                    </div>
+                                    <p class="upload-text">Drag & drop files here</p>
+                                    <input type="file" id="fileInput" name="file" required accept=".csv,.tsv,.xlsx">
+                                    <button type="button" class="btn btn-choose-file" id="chooseFileBtn">Choose File</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 d-flex">
+                <!-- ADDED interactive-gradient-card class -->
+                <div class="card interactive-gradient-card mb-4 w-100">
+                    <div class="card-header">
+                        Connect to Database
+                    </div>
+                    <div class="card-body interactive-card-body">
+                        <a href="{{ url_for('database_form') }}" class="file-upload-box text-decoration-none" id="connectDatabaseTrigger" style="width:100%; display:flex; flex-direction: column; flex-grow:1;"> 
+                            <div class="upload-content-wrapper">
+                                <div class="upload-icon-circle">
+                                    <i class="bi bi-database-plug"></i>
+                                </div>
+                                <p class="upload-text">Connect to your SQL database</p>
+                                <span class="btn btn-choose-file">Configure Connection</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- This card does NOT have the interactive-gradient-card class -->
+        <div class="card mt-2">
+            <div class="card-header">
+                Open Saved Session
+            </div>
+            <div class="card-body">
+                {% if saved_files_info %}
+                    <p class="mb-2">Reopen a previously saved cleaning session:</p>
+                    <div class="list-group saved-list">
+                        {% for file_item in saved_files_info %}
+                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('open_saved_session', filename=file_item.full) }}" class="filename-link me-2" title="Open {{ file_item.display }}">
+                                <i class="bi bi-folder2-open me-2"></i>{{ file_item.display }}
+                            </a>
+                            <div class="d-flex align-items-center saved-session-actions">
+                                <a href="{{ url_for('download_saved_file', filename=file_item.full, filetype='csv') }}"
+                                   class="btn btn-sm btn-outline-secondary border-0 p-1 me-1 btn-download-session" title="Download {{ file_item.display }} as CSV">
+                                    <i class="bi bi-filetype-csv"></i>
+                                </a>
+                                <a href="{{ url_for('download_saved_file', filename=file_item.full, filetype='xlsx') }}"
+                                   class="btn btn-sm btn-outline-secondary border-0 p-1 me-2 btn-download-session" title="Download {{ file_item.display }} as XLSX">
+                                    <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('delete_saved_session', filename=file_item.full) }}" 
+                                      style="display: inline;" 
+                                      onsubmit="return confirm('Are you sure you want to delete \'{{ file_item.display }}\'? This action cannot be undone.');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger border-0 p-1 btn-remove-session" title="Delete {{ file_item.display }}">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-3">No saved sessions found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- User Dropdown in Bottom Left Corner -->
+    {% if current_user %}
+    <div id="user-dropdown-container" class="dropup">
+        <a href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ current_user_display_name }}">
+            <div class="user-avatar">
+                {{ current_user_display_name[0]|upper if current_user_display_name else 'U' }}
+            </div>
+        </a>
+        <ul class="dropdown-menu" aria-labelledby="userDropdown">
+            <li>
+                <div class="px-3 py-2 text-center">
+                    <div class="user-avatar mx-auto mb-2" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                        {{ current_user_display_name[0]|upper if current_user_display_name else 'U' }}
+                    </div>
+                    <h6 class="mb-0 dropdown-header-text">{{ current_user_display_name }}</h6>
+                    {% if current_user.email %}
+                    <small class="text-muted">{{ current_user.email }}</small>
+                    {% endif %}
+                </div>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('account') }}"><i class="bi bi-gear-fill me-2"></i>Account Settings</a></li>
+
+            <!-- === REFERRAL SECTION START === -->
+            {% if current_user.referral_info %}
+                {% set ref_count = current_user.referral_info.count %}
+                {% set ref_target = current_user.referral_info.reward_target | default(10) %}
+                {% set progress_percent = (ref_count / ref_target * 100) | int if ref_target > 0 else 0 %}
+                
+                <li><hr class="dropdown-divider"></li>
+                
+                <li class="referral-info-item">
+                    <div class="px-3 pt-2 pb-1 text-center">
+                         <span class="fw-bold">{{ ref_count }} / {{ ref_target }}</span> Referrals
+                         <div class="progress" role="progressbar" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar" style="width: {{ progress_percent }}%;"></div>
+                         </div>
+                    </div>
+                </li>
+                
+                <li class="px-2 pb-1"> <!-- Wrapper to contain the animated item -->
+                    {% if ref_count < ref_target %}
+                        <div class="dropdown-item-special-progress">
+                             You are <strong>{{ ref_target - ref_count }}</strong> referral{{ 's' if (ref_target - ref_count) != 1 else '' }} away from 6 months of <strong>DataWarp Pro</strong>!
+                        </div>
+                    {% else %}
+                        <div class="dropdown-item-special-complete">
+                            <i class="bi bi-award-fill"></i> Your free <strong>DataWarp Pro</strong> subscription is active!
+                        </div>
+                    {% endif %}
+                </li>
+            {% endif %}
+            <!-- === REFERRAL SECTION END === -->
+
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Branding in Bottom Right Corner -->
+    <div id="branding-footer">
+        <a href="{{ url_for('index') }}" class="text-decoration-none text-muted">
+             <img src="{{ url_for('static', filename='img/logomain.png') }}" alt="DataWarp Logo" style="height: 20px; vertical-align: text-bottom; margin-right: 5px;">
+             DataWarp
+        </a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // JavaScript for file upload drag & drop + click (from your original)
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput');
+            const fileUploadForm = document.getElementById('fileUploadForm');
+            const fileUploadBox = document.getElementById('fileUploadBox');
+            const chooseFileBtn = document.getElementById('chooseFileBtn');
+
+            if (fileInput && fileUploadForm && fileUploadBox && chooseFileBtn) {
+                fileUploadBox.addEventListener('click', function(event) {
+                    if (event.target !== chooseFileBtn && !chooseFileBtn.contains(event.target)) {
+                        fileInput.click();
+                    }
+                });
+                chooseFileBtn.addEventListener('click', function(event) {
+                    event.stopPropagation(); 
+                    fileInput.click();
+                });
+                fileInput.addEventListener('change', function() {
+                    if (this.files && this.files.length > 0) {
+                        fileUploadForm.submit(); 
+                    }
+                });
+                fileUploadBox.addEventListener('dragover', function(event) {
+                    event.preventDefault(); event.stopPropagation();
+                    fileUploadBox.classList.add('dragging');
+                });
+                fileUploadBox.addEventListener('dragleave', function(event) {
+                    event.preventDefault(); event.stopPropagation();
+                    fileUploadBox.classList.remove('dragging');
+                });
+                fileUploadBox.addEventListener('drop', function(event) {
+                    event.preventDefault(); event.stopPropagation();
+                    fileUploadBox.classList.remove('dragging');
+                    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+                        fileInput.files = event.dataTransfer.files;
+                        const changeEvent = new Event('change', { bubbles: true });
+                        fileInput.dispatchEvent(changeEvent);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

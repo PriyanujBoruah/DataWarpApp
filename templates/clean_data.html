@@ -1,0 +1,1576 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Clean Data</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"> <!-- For Icons -->
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { padding-top: 5rem; font-family: "Plus Jakarta Sans", sans-serif !important;} /* Adjust for fixed navbar */
+        .main-container { display: flex; height: calc(100vh - 5rem); } /* Full height minus navbar */
+        .sidebar { width: 300px; padding: 1rem; border-right: 1px solid #dee2e6; overflow-y: auto; background-color: #f8f9fa; }
+        .content { flex-grow: 1; padding: 0.5rem 0rem; overflow-y: auto; display: flex; flex-direction: column; }
+        .table-container { flex-grow: 1; overflow: auto; border: 1px solid #dee2e6; }
+        .status-bar { font-size: 0.75em; color: #6c757d; margin-top: auto; padding-top: 0.25rem; border-top: 1px solid #dee2e6;}
+        /* .cleaning-control { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 3px solid #ceceea; } */ /* Replaced by new styles */
+        .form-label { font-weight: 500; font-size: 1rem;}
+        #loading-indicator { display: none; /* Hidden by default */ }
+        .toast-container { position: fixed; top: 60px; right: 20px; z-index: 1055; }
+        .modal-title { font-size: 1.125rem; }
+        .modal-form-label { font-size: 0.875rem; }
+
+        /* MODIFIED status-bar */
+        .status-bar { 
+            font-size: 0.8em; /* Slightly smaller for more content */
+            color: #6c757d; 
+            margin-top: auto; 
+            padding: 0.35rem 0.5rem; /* Adjusted padding */
+            border-top: 1px solid #dee2e6;
+            display: flex; /* Enable flexbox */
+            justify-content: space-between; /* Space out items */
+            align-items: center; /* Vertically align items */
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+        }
+        .status-bar > div { margin-bottom: 0.2rem; /* Spacing for wrapped items */ } /* Add some margin for wrapped items */
+
+
+        .navbar { border-width: 2px; border-bottom-style: solid; border-image: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3) 1; }
+        .navbar-brand { font-size: 1rem; font-weight: 900; color: #000 !important; }
+
+        /* User Avatar Styles */
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            border: 2px solid white; /* Optional: for a nice border */
+            box-shadow: 0 0 5px rgba(0,0,0,0.2); /* Optional: subtle shadow */
+        }
+        .user-avatar:hover {
+            opacity: 0.9;
+        }
+        @keyframes gradientAnimationInteractiveCard { /* Or a new name like gradientReferralPromo */
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* New class for the referral promo item in the dropdown */
+        .dropdown-item-referral-promo {
+            display: block; /* Make the span behave like a block for padding and full width */
+            padding: 0.5rem 1rem; /* Adjust padding as needed, similar to dropdown-item */
+            font-size: 0.8rem;
+            text-align: center; /* Center the text */
+            border-radius: 0.25rem; /* Optional: slightly rounded corners within the dropdown */
+            margin: 0.25rem 0.5rem; /* Optional: margin around it */
+
+            /* Animated Gradient Background */
+            background: linear-gradient(130deg, #4F00BC 0%, #A100ED 25%, #EF0093 50%, #F97900 75%, #F9B800 100%);
+            background-size: 300% 300%; /* Make it larger to see more of the animation */
+            animation: gradientAnimationInteractiveCard 10s ease infinite; /* Adjust duration if needed */
+            
+            color: #ffffff !important; /* Ensure text is white and overrides other dropdown text colors */
+            text-decoration: none; /* Remove underline if it was an <a> tag */
+        }
+
+        .dropdown-item-referral-promo i.bi-trophy {
+            color: #ffd700 !important; /* Gold color for the trophy icon on the gradient */
+            vertical-align: middle; /* Align icon better with text */
+        }
+
+        /* Optional: Style for the "Congrats" message if you want it different */
+        .dropdown-item-referral-achieved {
+            display: block;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            text-align: center;
+            border-radius: 0.25rem;
+            margin: 0.25rem 0.5rem;
+            background-color: #198754; /* Bootstrap success green */
+            color: #ffffff !important;
+            text-decoration: none;
+        }
+        .dropdown-item-referral-achieved i.bi-award-fill {
+            color: #ffd700 !important; /* Gold award icon */
+            vertical-align: middle;
+        }
+        .dropdown-menu-end { /* Ensure dropdown aligns to the right */
+            right: 0;
+            left: auto;
+        }
+
+
+        .table-sm th { 
+            position: sticky; 
+            top: 0; 
+            background-color: #ffffff; 
+            z-index: 1; 
+            cursor: pointer;
+            border-color: #FFF;
+            border-radius: 14px !important;
+            
+        } /* Sticky header */
+        .table-sm th:hover { 
+            background-color: #7612fa !important; 
+            color: #FFF !important;
+        }
+        .table-container th.active-stat-col {
+            background: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3) !important;
+            color: #FFF !important;
+        }
+        th {
+            font-size: 0.75rem;
+        }
+        td {
+            font-size: 0.75rem;
+        }
+        
+        .btn {
+            font-size: .8rem !important;
+        }
+        .btn-primary {
+            padding: 10px 12px;
+            font-weight: 600;
+            background: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3) !important;
+            border: none;
+            border-radius: 14px;
+            font-size: .8rem !important;
+        }
+        .btn-dark {
+            padding: 12px 18px;
+            font-weight: 600;
+            background-color: #000 !important;
+            border: none;
+            border-radius: 14px;
+            font-size: .8rem !important;
+        }
+        .btn-outline-dark {
+            font-weight: 600;
+        }
+        .btn-outline-info {
+            font-weight: 600;
+            border-color: #7612fa !important;
+            color: #7612fa !important;
+            border-radius: 0 8px 8px 0 !important;
+        }
+        .btn-outline-info:hover {
+            background-color: #7612fa !important;
+            color: #fff !important;
+        }
+        .container-border {
+            padding: .3125rem;
+            border: 1px solid #ceceea;
+            border-radius: 14px;
+        }
+        #core-components {
+            background-color: #FFF !important;
+            margin: auto;
+        }
+        .core-components-bg {
+            background: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3) !important;
+            border-radius: 15px !important;
+            padding: 0.1rem !important;
+        }
+        #container-border-column {
+            background-color: #F1F1F9 !important;
+        }
+        #undo-btn, #redo-btn, #filter-btn, #sort-btn, #split-btn, #combine-btn, #rename-btn, #drop-btn, #home-btn, #close-modal-btn, #auto-clean-btn, #config-panel-btn, #visualize-btn, #feature-btn, #downloadDropdown {
+            border: none;
+            border-radius: .5625rem !important;
+            font-size: .8rem !important;
+            color: #24223e !important;
+        }
+        #undo-btn:hover, #redo-btn:hover, #filter-btn:hover, #sort-btn:hover, #split-btn:hover, #combine-btn:hover, #rename-btn:hover, #drop-btn:hover, #home-btn:hover, #close-modal-btn:hover, #auto-clean-btn:hover, #config-panel-btn:hover, #visualize-btn:hover, #feature-btn:hover, #downloadDropdown:hover, #downloadDropdown:active {
+            background-color: #F1F1F9 !important;
+        }
+        #remove-duplicates-btn, #remove-missing-btn, #fill-missing-btn, #optimize-categories-btn, #convert-dtype-btn, #parse-datetime-btn, #check-format-btn, #show-outlier-ranges-btn, #change-case-btn, #map-values-btn, #save-auto-clean-config-btn {
+            border: none;
+            border-radius: .5625rem !important;
+            font-size: .8rem !important;
+            color: #24223e !important;
+            background-color: #F1F1F9;
+        }
+        #remove-duplicates-btn:hover, #remove-missing-btn:hover, #fill-missing-btn:hover, #optimize-categories-btn:hover, #convert-dtype-btn:hover, #parse-datetime-btn:hover, #check-format-btn:hover, #show-outlier-ranges-btn:hover, #change-case-btn:hover, #map-values-btn:hover, #save-auto-clean-config-btn:hover {
+            background-color: #ceceea !important;
+        }
+        #save-filename {
+            padding: .3125rem;
+            border: 1px solid #ceceea;
+            border-radius: 8px 0 0 8px !important;
+        }
+        #r-round {
+            border-radius: 0 12px 12px 0 !important;
+        }
+        #l-round {
+            border-radius: 12px 0 0 12px !important;
+        }
+
+
+        .modal-content {
+            border-radius: 1.25rem !important;
+        }
+
+
+
+
+        .form-select { padding: 6px 10px !important; font-size: 0.75rem !important; border: 1px solid #ceceea; border-radius: 12px !important;}
+        .form-control { padding: 6px 10px !important; font-size: 0.75rem !important; border: 1px solid #ceceea; border-radius: 12px !important;}
+        .form-text { font-size: 0.75rem !important; }
+        .input-group-text { font-size: 0.75rem !important; }
+
+        /* --- Adjust Main Layout for Stats Panel --- */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 5rem); /* Full height minus navbar */
+        }
+        .sidebar {
+            width: 300px; /* Keep sidebar width */
+            flex-shrink: 0; /* Prevent sidebar from shrinking */
+            border-right: 1px solid #dee2e6;
+            background-color: #FFF; /* Changed from #f8f9fa for consistency with content */
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        .content-and-stats-wrapper { /* New wrapper for content and stats */
+             display: flex;
+             flex-grow: 1; /* Takes up remaining space */
+             overflow: hidden; /* Prevent wrapper overflow */
+        }
+        .content {
+            flex-grow: 1; /* Content area takes available space */
+            padding: 0.5rem 0rem;
+            overflow-y: auto; /* Scroll content independently */
+            display: flex;
+            flex-direction: column;
+        }
+        /* --- End Main Layout Adjustments --- */
+
+
+        /* --- Stats Panel Styles --- */
+        .stats-panel {
+            width: 300px; /* Slightly wider for new lists */
+            flex-shrink: 0;
+            border-left: 1px solid #ceceea;
+            background-color: #ffffff;
+            border-top: 1px solid #ceceea; /* Add top border */
+            border-right: 1px solid #ceceea; /* Add right border */
+            border-bottom: 1px solid #ceceea; /* Add bottom border */
+            border-radius: 12px 0 0 12px; /* Adjusted rounding */
+            padding: 1rem;
+            overflow-y: auto;
+            display: none;
+        }
+        .stats-panel h5 { margin-bottom: 0.5rem; font-size: 1.1em; } /* Main title */
+        .stats-panel h6 { margin-top: 1rem; margin-bottom: 0.5rem; font-size: 0.9em; font-weight: bold; color: #333; border-bottom: 1px solid #eee; padding-bottom: 0.25rem;} /* Sub-section titles */
+        
+        #stats-content ul { list-style: none; padding-left: 0; }
+        #stats-content li { margin-bottom: 0.5rem; font-size: 0.85em; display: flex; justify-content: space-between; }
+        #stats-content .stat-label { font-weight: bold; font-size: 0.75rem; color: #555; margin-right: 0.5rem; }
+        #stats-content .stat-value { text-align: right; font-size: 0.75rem; word-break: break-all; }
+        
+        #stats-panel-placeholder { color: #6c757d; font-style: italic; font-size: 0.9em; }
+        #stats-panel-loading { text-align: center; padding: 2rem 0; }
+        #stats-panel-close-btn { float: right; font-size: 1.2rem; line-height: 1; }
+
+        .stats-panel .form-label.small { font-size: 0.8em; margin-bottom: 0.2rem; }
+        .stats-panel .form-select-sm, .stats-panel .form-control-sm { font-size: 0.85em; }
+        #data-validation-section h6 { 
+            margin-top: 1rem; 
+            margin-bottom: 0.5rem; 
+            font-size: 0.9em; 
+            font-weight: bold; 
+            color: #333; 
+            border-bottom: 1px solid #eee; 
+            padding-bottom: 0.25rem;
+        }
+        #validation-results-area .stat-label { font-weight: bold; font-size: 0.75rem; color: #555; }
+        #validation-results-area .stat-value { text-align: right; font-size: 0.75rem; }
+        #validation-summary { margin-bottom: 0.5rem; font-size: 0.85em; display: flex; justify-content: space-between; }
+
+        /* Styles for Unique/Duplicate lists */
+        .list-scrollable-container {
+            max-height: 150px; /* Adjust as needed */
+            overflow-y: auto;
+            border: 1px solid #e9ecef; /* Lighter border */
+            padding: 0.5rem;
+            font-size: 0.8em; /* Smaller font for list items */
+            background-color: #f8f9fa; /* Light background for contrast */
+            border-radius: 0.25rem;
+        }
+        .list-scrollable-container ul { /* Populated by JS */
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+        .list-scrollable-container li { /* Populated by JS */
+            padding: 0.25rem 0.1rem; /* Slightly more padding */
+            border-bottom: 1px dashed #dee2e6; /* Lighter dash */
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Vertically align items */
+            line-height: 1.3;
+        }
+        .list-scrollable-container li:last-child {
+            border-bottom: none;
+        }
+        .list-scrollable-container .value-item { /* For both unique and duplicate value part */
+            word-break: break-all; /* Break long values */
+            flex-grow: 1; /* Allow value to take space if needed */
+        }
+        .list-scrollable-container .count-item { /* Specifically for duplicate counts */
+            margin-left: 10px;
+            font-weight: 600; /* Slightly bolder */
+            color: #495057; /* Darker gray */
+            white-space: nowrap; /* Keep count on one line */
+            background-color: #e9ecef; /* Light badge-like background */
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.2rem;
+            font-size: 0.9em; /* Relative to parent */
+        }
+        .list-scrollable-container .placeholder-text {
+            color: #6c757d;
+            font-style: italic;
+            padding: 0.5rem 0;
+        }
+        .count-display-text {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+            display: block; /* Make it take full width */
+        }
+        /* --- End Stats Panel Styles --- */
+
+
+        /* --- Toolbar Styles --- */
+        .data-actions-toolbar {
+            border-bottom: 1px solid #dee2e6;
+        }
+        .column-ops-group {
+            background-color: #e9ecef; 
+            padding: 0.3rem 0.6rem; 
+            border-radius: var(--bs-border-radius-sm); 
+        }
+        .column-ops-group .btn {
+            margin-left: 0.4rem; 
+        }
+        .column-ops-group span {
+             font-weight: 500; 
+        }
+
+
+        /* --- Config Panel Styles (similar to stats panel) --- */
+        .config-panel {
+            width: 280px; 
+            flex-shrink: 0; 
+            border-left: 1px solid #ceceea;
+            background-color: #ffffff; 
+            border: 1px solid #ceceea;
+            border-radius: 12px 0 0 0;
+            padding: 1rem;
+            overflow-y: auto; 
+            display: none; 
+        }
+        .config-panel h5 { margin-bottom: 1rem; }
+        .config-panel .form-label { font-weight: 500; font-size: 0.9em; margin-bottom: 0.2rem; }
+        .config-panel .form-select-sm, .config-panel .form-control-sm { font-size: 0.85em; }
+        .config-panel .form-check-label { font-size: 0.9em; }
+        .config-panel .form-text { font-size: 0.8em; }
+        .config-section { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px dashed #ccc; }
+        .config-section:last-child { border-bottom: none; }
+        #config-panel-close-btn { float: right; font-size: 1.2rem; line-height: 1; }
+        .form-check-input:checked { background-color: #7612fa !important; border-color: #7612fa !important; }
+
+
+        /* --- Outlier Ranges Panel Styles (similar to config/stats panel) --- */
+        .outlier-ranges-panel {
+            width: 280px; 
+            flex-shrink: 0; 
+            border-left: 1px solid #ceceea;
+            background-color: #ffffff; 
+            border: 1px solid #ceceea;
+            border-radius: 12px 0 0 0;
+            padding: 1rem;
+            overflow-y: auto; 
+            display: none; 
+        }
+        .outlier-ranges-panel h5 { margin-bottom: 1rem; }
+        #outlier-ranges-panel-close-btn { float: right; font-size: 1.2rem; line-height: 1; }
+        .accordion-button { font-size: 0.9rem; padding: 0.6rem 1rem; }
+        .accordion-body { font-size: 0.85rem; padding: 0.75rem 1rem; }
+        .accordion-body ul { list-style-type: none; padding-left: 0; }
+        .accordion-body li { margin-bottom: 0.25rem; }
+        .accordion-body code { font-size: 0.9em; }
+
+        .r-round { border-radius: 0 12px 12px 0 !important; }
+        .l-round { border-radius: 12px 0 0 12px !important; }
+        .no-round { border-radius: 0 !important; }
+
+        /* --- Sidebar Expandable Operations Styles --- */
+        .cleaning-control {
+            margin-bottom: 0.5rem; /* Space between each control block */
+            border-bottom: 1px solid #dee2e6; /* Separator line */
+            padding-bottom: 0.5rem; /* Small padding to push border down from header if collapsed */
+        }
+        .cleaning-control:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0; /* No padding if no border */
+        }
+        .cleaning-control-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500; /* from .form-label */
+            font-size: 1rem;   /* from .form-label */
+            color: #212529; /* Default text color */
+            padding: 0.5rem 0; /* Padding for the clickable header area */
+            text-decoration: none; /* If using <a> tag */
+        }
+        .cleaning-control-header:hover {
+            color: #7612fa; /* Theme color for hover */
+        }
+        .cleaning-control-header .bi-chevron-down { /* Target specific icon for rotation */
+            font-size: 0.9rem;
+            transition: transform 0.2s ease-in-out;
+        }
+        .cleaning-control-header[aria-expanded="true"] .bi-chevron-down {
+            transform: rotate(180deg);
+        }
+        .cleaning-control .collapse .cleaning-control-content {
+            padding-top: 0.5rem; /* Space between header and start of content */
+            padding-bottom: 0.5rem; /* Space between end of content and the cleaning-control's bottom border */
+        }
+        /* --- End Sidebar Expandable Operations Styles --- */
+
+
+        .premium-feature {
+            position: relative; /* This provides the positioning context for the badge */
+            display: inline-block; /* Ensures the wrapper only takes up the space of the button */
+        }
+        .premium-pro-badge {
+            position: absolute;
+            top: -5px;      /* Position the badge slightly above the button */
+            right: -8px;   /* Position the badge to the right edge */
+            font-size: 0.75em;
+            font-weight: 700;
+            padding: 2px 5px;
+            background-color: #f8f9fa;
+            pointer-events: none; /* The badge isn't clickable */
+            line-height: 1;
+
+            /* The Gradient Text Effect */
+            background-image: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+
+        }
+        .premium-feature.disabled .premium-pro-badge {
+            opacity: 1 !important; /* Force full opacity on the badge even when the button is faded */
+        }
+
+        .search-column-select {
+            width: max-content !important;
+        }
+
+
+        /* --- FLOATING REPORT ISSUE BUTTON --- */
+        .floating-report-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 1050;
+            display: flex;
+            align-items: center;
+            background-color: #7612fa; /* Start with brand purple */
+            color: #fff;
+            padding: 10px;
+            border-radius: 50px; /* Pill shape */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-decoration: none;
+            transition: all 0.3s ease-in-out;
+            overflow: hidden; /* Important for containing the expanding text */
+        }
+
+        .floating-report-btn .report-text {
+            max-width: 0;
+            opacity: 0;
+            white-space: nowrap;
+            transition: max-width 0.3s ease-in-out, opacity 0.2s ease-in-out 0.1s; /* Delay opacity transition */
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding-left: 0; /* No padding initially */
+        }
+
+        .floating-report-btn .report-icon {
+            font-size: 1.5rem;
+            line-height: 1;
+            margin-left: 5px; /* Give icon some space */
+        }
+
+        .floating-report-btn:hover {
+            background: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3);
+            box-shadow: 0 6px 20px rgba(118, 18, 250, 0.3);
+        }
+
+        .floating-report-btn:hover .report-text {
+            max-width: 150px; /* Expand to this width */
+            opacity: 1;
+            padding-left: 8px; /* Add space between text and icon */
+            padding-right: 5px;
+        }
+        .floating-report-btn:hover .report-icon {
+            margin-left: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fixed Navbar -->
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-white">
+        <div class="container-fluid align-items-center">
+            <img src="static\img\logomain.png" class="logo-img me-2 ms-3" alt="YourCompanyName Logo" style="height: 20px;">
+            <a class="navbar-brand" href="{{ url_for('index') }}">DataWarp</a>
+            <div class="container-border ms-4">
+                <!-- Undo/Redo Buttons -->
+                <button id="undo-btn" class="btn btn-outline-secondary btn-sm me-2" {% if not undo_redo_status.undo_enabled %}disabled{% endif %}>
+                    <i class="bi bi-arrow-90deg-left"></i>
+                </button>
+                <button id="redo-btn" class="btn btn-outline-secondary btn-sm me-4" {% if not undo_redo_status.redo_enabled %}disabled{% endif %}>
+                    <i class="bi bi-arrow-90deg-right"></i>
+                </button>
+                <!-- Left Group: Filter & Sort -->
+                <button type="button" id="filter-btn" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal" title="Filter rows based on conditions">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+                <button type="button" id="sort-btn" class="btn btn-sm btn-outline-secondary me-4" data-bs-toggle="modal" data-bs-target="#sortModal" title="Sort data by selected columns">
+                    <i class="bi bi-sort-alpha-down"></i> Sort
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="auto-clean-btn" title="Apply automatic, non-destructive cleaning steps (whitespace, type conversion, case)">
+                    <i class="bi bi-magic"></i> Auto Clean
+                </button>
+                <div class="premium-feature me-4">
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-secondary {% if not is_premium_user %}disabled{% endif %}" 
+                            id="config-panel-btn" 
+                            title="{% if is_premium_user %}Configure Auto Clean{% else %}Upgrade to Pro to configure Auto Clean{% endif %}"
+                            {% if not is_premium_user %}disabled{% endif %}>
+                        <i class="bi bi-gear-fill"></i> Config
+                    </button>
+                    {% if not is_premium_user %}<span class="premium-pro-badge">Pro</span>{% endif %}
+                </div>
+                <div class="premium-feature me-2">
+                    <a id="visualize-btn" 
+                       {% if is_premium_user %}href="{{ url_for('visualize_data') }}"{% endif %}
+                       class="btn btn-sm btn-outline-secondary {% if not is_premium_user %}disabled{% endif %}" 
+                       title="{% if is_premium_user %}Visualize data patterns{% else %}Upgrade to Pro to visualize data{% endif %}"
+                       >
+                        <i class="bi bi-bar-chart-line"></i> Visualize
+                    </a>
+                    {% if not is_premium_user %}<span class="premium-pro-badge">Pro</span>{% endif %}
+                </div>
+                <div class="premium-feature"> <!-- No margin on the last item -->
+                    <a id="feature-btn" 
+                       {% if is_premium_user %}href="{{ url_for('show_features') }}"{% endif %}
+                       class="btn btn-sm btn-outline-secondary {% if not is_premium_user %}disabled{% endif %}" 
+                       title="{% if is_premium_user %}View derived data features and patterns{% else %}Upgrade to Pro for advanced features{% endif %}"
+                       >
+                        <i class="bi bi-binoculars"></i> Features
+                    </a>
+                    {% if not is_premium_user %}<span class="premium-pro-badge">Pro</span>{% endif %}
+                </div>
+            </div>
+            <div class="ms-auto d-flex align-items-center">
+
+                <h6 id="source-info-display" class="me-4">{{ source_info }}</h6>
+
+                <!-- Save Button -->
+                <div class="input-group input-group-sm me-2" style="width: auto;">
+                    <input type="text" id="save-filename" class="form-control form-control-sm" placeholder="Optional: filename.parquet" value="{{ saved_filename if saved_filename else '' }}">
+                    <button id="save-btn" class="btn btn-outline-info">
+                        <i class="bi bi-save"></i> Save
+                    </button>
+                </div>
+
+                <!-- Download Dropdown -->
+                <div class="container-border ms-3">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light btn-sm" type="button" id="downloadDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-download"></i> Download
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="downloadDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('download_file', filetype='csv') }}">Download as CSV</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('download_file', filetype='xlsx') }}">Download as XLSX</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Home Button -->
+                <div class="core-components-bg ms-3">
+                    <div class="container-border bg-white">
+                        <a href="{{ url_for('index') }}" id="home-btn" class="btn btn-outline-light btn-sm">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                    </div>
+                </div>
+
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="user-avatar">
+                                    {{ current_user_display_name[0]|upper if current_user_display_name else 'U' }}
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li>
+                                    <div class="px-3 py-2 text-center"> <!-- Container for user info -->
+                                        <div class="user-avatar mx-auto mb-2" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                                            {{ current_user_display_name[0]|upper if current_user_display_name else 'U' }}
+                                        </div>
+                                        <h6 class="mb-0 dropdown-header-text">{{ current_user_display_name }}</h6>
+                                        {% if current_user.email %} {# Assuming current_user.email is populated by inject_user #}
+                                        <small class="text-muted">{{ current_user.email }}</small>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <!-- UPDATED My Profile Link -->
+                                <li><a class="dropdown-item" href="{{ url_for('account') }}"><i class="bi bi-person-circle me-2"></i>My Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('account') }}"><i class="bi bi-gear-fill me-2"></i>Account Settings</a></li>
+                                
+                                <!-- Referral Count Display & Promo -->
+                                {% if current_user.referral_info %} {# Check if referral_info object exists #}
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('account') }}#referrals_section"> {# Anchor link to account page #}
+                                        <i class="bi bi-people-fill me-2"></i>Referrals: 
+                                        <span class="badge rounded-pill bg-primary ms-1">
+                                            {{ current_user.referral_info.count }}/{{ current_user.referral_info.max_display }}
+                                        </span>
+                                    </a>
+                                </li>
+                                
+                                {% if current_user.referral_info.needed_for_reward > 0 %}
+                                <li> {# Wrap the promo span in an <li> for proper dropdown structure #}
+                                    <span class="dropdown-item-referral-promo"> {# Applied new class for gradient #}
+                                        <i class="bi bi-trophy me-1"></i> 
+                                        {{ current_user.referral_info.needed_for_reward }} 
+                                        referral{{ 's' if current_user.referral_info.needed_for_reward != 1 else '' }}
+                                        away from free 6 months of DataWarp Pro!
+                                    </span>
+                                </li>
+                                {% elif current_user.referral_info.count >= current_user.referral_info.reward_target %} 
+                                <li>
+                                    <span class="dropdown-item-referral-achieved"> {# Optional different class for achieved state #}
+                                        <i class="bi bi-award-fill me-1"></i>
+                                        Congrats! You've earned a reward for referrals!
+                                    </span>
+                                </li>
+                                {% endif %}
+                                {% endif %}
+                                <!-- End Referral Count Display & Promo -->
+
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('signup') }}">Sign Up</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="main-container">
+        <!-- ================================================== -->
+        <!-- Sidebar (Now contains only simpler cleaning tools) -->
+        <!-- ================================================== -->
+        <aside class="sidebar">
+            <h6 style="text-align: center;"><i class="bi bi-tools"></i> Cleaning Tools</h6>
+            <hr>
+
+            <!-- Duplicates -->
+            <div class="cleaning-control">
+                <div class="cleaning-control-header" data-bs-toggle="collapse" data-bs-target="#collapseDuplicates" aria-expanded="false" aria-controls="collapseDuplicates">
+                    <span>Duplicates</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="collapse" id="collapseDuplicates">
+                    <div class="cleaning-control-content">
+                        <div class="core-components-bg">
+                            <div class="container-border bg-white" style="border: none;">
+                                <button id="remove-duplicates-btn" class="btn btn-outline-secondary w-100 btn-sm" data-action="remove_duplicates" title="Remove rows that are exact duplicates across all columns. Keeps the first occurrence.">
+                                Clean Duplicate Rows
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-text">Removes entire rows if they are identical.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Missing Values -->
+            <div class="cleaning-control">
+                <div class="cleaning-control-header" data-bs-toggle="collapse" data-bs-target="#collapseMissingValues" aria-expanded="false" aria-controls="collapseMissingValues">
+                    <span>Missing Values</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="collapse" id="collapseMissingValues">
+                    <div class="cleaning-control-content">
+                        <div class="core-components-bg">
+                            <div class="container-border bg-white" style="border: none;">
+                                <button id="remove-missing-btn" class="btn btn-outline-secondary w-100 btn-sm" data-action="remove_missing" data-params='{"how": "any"}' title="Remove rows that contain ANY missing value (NaN, None, NaT).">
+                                    Remove Rows with Missing Values
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-text mb-2">Removes entire rows with nulls.</div>
+                        
+                        <label class="form-label mt-2">Fill Missing Values</label>
+                        <div class="mb-1">
+                            <select class="form-select form-select-sm" id="fill-missing-method" title="Select how to fill missing values">
+                                <option value="value" selected>Specific Value</option>
+                                <option value="mean">Mean (Numeric Cols)</option>
+                                <option value="median">Median (Numeric Cols)</option>
+                                <option value="mode">Mode (Numeric Cols)</option>
+                                <option value="ffill">Forward Fill (Last Valid)</option>
+                                <option value="bfill">Backward Fill (Next Valid)</option>
+                            </select>
+                        </div>
+                        <div class="input-group input-group-sm mb-1">
+                            <select class="form-select form-select-sm" id="fill-missing-column" title="Select column to fill, or leave blank to apply method to all applicable columns">
+                                <option value="" selected>-- Apply to All Columns --</option>
+                                {% for col in columns %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="input-group input-group-sm mb-1" id="fill-value-input-group">
+                            <input type="text" class="form-control form-control-sm" id="fill-missing-value" placeholder="Value to fill with" title="Enter the value to replace missing data. Only used when 'Specific Value' method is selected.">
+                        </div>
+                        <div class="container-border">
+                            <button id="fill-missing-btn" class="btn btn-outline-secondary w-100 btn-sm" type="button" data-action="fill_missing">Fill Missing Values</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Whitespace -->
+            <div class="cleaning-control">
+                <div class="cleaning-control-header" data-bs-toggle="collapse" data-bs-target="#collapseWhitespace" aria-expanded="false" aria-controls="collapseWhitespace">
+                    <span>Trim Whitespace</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="collapse" id="collapseWhitespace">
+                    <div class="cleaning-control-content">
+                        <label for="remove-spaces-column" class="form-label">Target Column:</label>
+                        <div class="input-group input-group-sm">
+                            <select class="form-select form-select-sm l-round" id="remove-spaces-column" required>
+                                <option value="" selected disabled>-- Select Text Column --</option>
+                                {% for col in columns %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                            <button id="r-round" class="btn btn-primary" type="button" data-action="remove_spaces" title="Remove leading/trailing spaces from text columns.">Trim</button>
+                        </div>
+                        <div class="form-text">Only applicable to text columns.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Types & Formats -->
+            <div class="cleaning-control">
+                <div class="cleaning-control-header" data-bs-toggle="collapse" data-bs-target="#collapseDataTypes" aria-expanded="false" aria-controls="collapseDataTypes">
+                    <span>Data Types & Formats</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="collapse" id="collapseDataTypes">
+                    <div class="cleaning-control-content">
+                        <label class="form-label">Convert Data Type</label>
+                        <div class="input-group input-group-sm mb-1">
+                            <select class="form-select form-select-sm" id="change-dtype-column" required>
+                                <option value="" selected disabled>-- Select Column --</option>
+                                {% for col in columns %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="input-group input-group-sm mb-1">
+                            <select class="form-select form-select-sm" id="change-dtype-target-type" required>
+                                <option value="" selected disabled>-- To Type --</option>
+                                <option value="string">Text (String)</option>
+                                <option value="integer">Integer (Whole Number)</option>
+                                <option value="float">Decimal (Float)</option>
+                                <option value="datetime">Date/Time</option>
+                                <option value="boolean">Boolean (True/False)</option>
+                                <option value="category">Category (Optimize Text)</option>
+                            </select>
+                        </div>
+                        <div class="container-border mb-2">
+                            <button id="convert-dtype-btn" class="btn btn-outline-secondary w-100 btn-sm" type="button" data-action="change_dtype" title="Attempt to convert column to selected type. Invalid values may become null.">Convert Type</button>
+                        </div>
+                        
+                        <label class="form-label mt-2">Optimize Text Columns</label>
+                        <div class="core-components-bg">
+                            <div class="container-border bg-white" style="border: none;">                    
+                                <button id = "optimize-categories-btn" class="btn btn-outline-secondary w-100 btn-sm" type="button" title="Automatically convert suitable text columns to the memory-efficient Category type.">
+                                    <i class="bi bi-arrow-repeat"></i> Optimize Low-Cardinality Text
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-text mb-2">Use Date/Time tools below for specific date formats.</div>
+
+                        <label class="form-label mt-2">Convert to Date/Time</label>
+                        <div class="input-group input-group-sm mb-1">
+                            <select class="form-select form-select-sm" id="fix-datetime-column" required>
+                                <option value="" selected disabled>-- Select Column --</option>
+                                {% for col in columns %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="input-group input-group-sm mb-1">
+                            <input type="text" class="form-control form-control-sm" id="fix-datetime-format" placeholder="Optional format (e.g., %Y-%m-%d)" title="Python strptime format. Leave blank to auto-detect.">  
+                        </div>
+                        <div class="container-border">
+                            <button id="parse-datetime-btn" class="btn btn-outline-secondary w-100 btn-sm" type="button" data-action="fix_datetime" title="Attempt conversion to datetime. Invalid values become NaT (null).">Parse Dates</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+             <!-- ID Checks -->
+            <div class="cleaning-control">
+                <div class="cleaning-control-header" data-bs-toggle="collapse" data-bs-target="#collapseIdChecks" aria-expanded="false" aria-controls="collapseIdChecks">
+                    <span>Check IDs / Values</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="collapse" id="collapseIdChecks">
+                    <div class="cleaning-control-content">
+                        <label class="form-label">Check Uniqueness</label>
+                        <div class="input-group input-group-sm mb-2">
+                            <select class="form-select form-select-sm l-round" id="check-id-uniqueness-column" required>
+                                <option value="" selected disabled>-- Select Column --</option>
+                                {% for col in columns %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                            <button id="r-round" class="btn btn-outline-info" type="button" data-action="check_id_uniqueness" title="Check if all values in the column are unique. Does not modify data.">Check Uniqueness</button>
+                        </div>
+                        <label class="form-label mt-2">Check Format (Regex)</label>
+                        <div class="input-group input-group-sm mb-1">
+                            <select class="form-select form-select-sm" id="check-id-format-column" required>
+                                <option value="" selected disabled>-- Select Column --</option>
+                                {% for col in columns %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control form-control-sm mb-1" id="check-id-format-pattern" placeholder="Regex pattern (e.g., \d{3}-\d{2})" title="Python Regex. Will check if entire cell value matches." required>
+                        </div>
+                        <div class="container-border">
+                            <button id="check-format-btn" class="btn btn-outline-secondary w-100 btn-sm" type="button" data-action="check_id_format" title="Check if values match the regex pattern. Does not modify data.">Check Format</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Numerical Outliers -->
+            <div class="cleaning-control">
+                <div class="cleaning-control-header" data-bs-toggle="collapse" data-bs-target="#collapseOutliers" aria-expanded="false" aria-controls="collapseOutliers">
+                    <span>Numerical Outliers</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="collapse" id="collapseOutliers">
+                    <div class="cleaning-control-content">
+                        <label class="form-label">Target Column:</label>
+                        <div class="input-group input-group-sm mb-1">
+                            <select class="form-select form-select-sm" id="outlier-column" required>
+                                <option value="" selected disabled>-- Select Numeric Column --</option>
+                                {% for col in columns %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label for="outlier-method-select" class="form-label small">Method:</label>
+                            <select class="form-select form-select-sm" id="outlier-method-select">
+                                <option value="iqr" selected>IQR (Interquartile Range)</option>
+                                <option value="zscore">Z-score</option>
+                            </select>
+                        </div>
+
+                        <!-- IQR Specific Controls -->
+                        <div id="outlier-iqr-controls">
+                            <div class="input-group input-group-sm mb-1">
+                                <span class="input-group-text">IQR Factor</span>
+                                <input type="number" class="form-control form-control-sm no-round" id="outlier-iqr-factor" value="1.5" step="0.1" min="0.1">
+                                <button class="btn btn-outline-info no-round" type="button" data-action="remove_outliers_iqr" title="Remove rows with outliers (IQR)">Remove</button>
+                                <button class="btn btn-primary r-round" type="button" data-action="clip_outliers_iqr" title="Clip outliers to IQR bounds">Clip</button>
+                            </div>
+                        </div>
+
+                        <!-- Z-score Specific Controls (Initially Hidden) -->
+                        <div id="outlier-zscore-controls" style="display: none;">
+                            <div class="input-group input-group-sm mb-1">
+                                <span class="input-group-text">Z Thresh.</span>
+                                <input type="number" class="form-control form-control-sm no-round" id="outlier-zscore-threshold" value="3.0" step="0.1" min="1.0">
+                                <button class="btn btn-outline-info no-round" type="button" data-action="remove_outliers_zscore" title="Remove rows with Z-score outliers">Remove</button>
+                                <button class="btn btn-primary r-round" type="button" data-action="clip_outliers_zscore" title="Clip outliers to Z-score bounds">Clip</button>
+                            </div>
+                        </div>
+                        
+                        <div class="container-border mt-2">
+                            <button type="button" class="btn btn-outline-secondary w-100 btn-sm" id="show-outlier-ranges-btn">
+                                <i class="bi bi-arrows-expand"></i> Show Outlier Ranges
+                            </button>
+                        </div>
+                        <div class="form-text small">"Show Ranges" panel displays bounds for both methods.</div>
+                    </div>
+                </div>
+            </div>
+
+             <!-- String Manipulation -->
+            <div class="cleaning-control">
+                <div class="cleaning-control-header" data-bs-toggle="collapse" data-bs-target="#collapseFindReplace" aria-expanded="false" aria-controls="collapseFindReplace">
+                    <span>Find & Replace Text</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="collapse" id="collapseFindReplace">
+                    <div class="cleaning-control-content">
+                        <label class="form-label">Target Column:</label>
+                        <div class="input-group input-group-sm mb-1">
+                            <select class="form-select form-select-sm" id="replace-text-column" required>
+                                <option value="" selected disabled>-- Select Text Column --</option>
+                                {% for col in columns %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="input-group input-group-sm mb-1">
+                            <input type="text" class="form-control form-control-sm l-round" id="replace-text-find" placeholder="Find Text" title="Text or Regex pattern to find." required>
+                            <input type="text" class="form-control form-control-sm r-round" id="replace-text-replace" placeholder="Replace With" title="Text to replace matches with.">
+                        </div>
+                        <div class="input-group input-group-sm">
+                            <div class="input-group-text">
+                                <input class="form-check-input mt-0" type="checkbox" id="replace-text-regex" title="Check to treat 'Find Text' as a Regex pattern.">
+                                <label class="form-check-label ms-2 l-round" for="replace-text-regex" style="font-size:0.85em;">Use Regex</label>
+                            </div>
+                            <button id="r-round" class="btn btn-outline-info r-round" type="button" data-action="replace_text">Replace</button>
+                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cleaning-control">
+                <div class="cleaning-control-header" data-bs-toggle="collapse" data-bs-target="#collapseChangeCase" aria-expanded="false" aria-controls="collapseChangeCase">
+                    <span>Change Text Case</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="collapse" id="collapseChangeCase">
+                    <div class="cleaning-control-content">
+                        <label class="form-label">Target Column:</label>
+                        <div class="input-group input-group-sm mb-1">
+                            <select class="form-select form-select-sm" id="change-case-column" required>
+                                <option value="" selected disabled>-- Select Text Column --</option>
+                                {% for col in columns %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="form-label mt-1">Case Type:</label>
+                        <div class="input-group input-group-sm mb-1">
+                            <select class="form-select form-select-sm" id="change-case-type" required>
+                                <option value="" selected disabled>-- Case Type --</option>
+                                <option value="lower">lowercase</option>
+                                <option value="upper">UPPERCASE</option>
+                                <option value="title">Title Case</option>
+                            </select>
+                        </div>
+                        <div class="container-border">
+                            <button id="change-case-btn" class="btn btn-outline-secondary w-100 btn-sm" type="button" data-action="change_case">Change Case</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Value Mapping -->
+            <div class="cleaning-control">
+                <div class="cleaning-control-header" data-bs-toggle="collapse" data-bs-target="#collapseMapValues" aria-expanded="false" aria-controls="collapseMapValues">
+                    <span>Map Values</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="collapse" id="collapseMapValues">
+                    <div class="cleaning-control-content">
+                        <label for="map-values-column" class="form-label">Target Column:</label>
+                        <div class="input-group input-group-sm mb-1">
+                            <select class="form-select form-select-sm" id="map-values-column" required>
+                                <option value="" selected disabled>-- Select Column --</option>
+                                {% for col in columns %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label for="map-values-dict" class="form-label mt-1">Mapping (JSON):</label>
+                        <textarea class="form-control form-control-sm mb-1" id="map-values-dict" rows="3" placeholder='Enter JSON map, e.g.: {"old_val1": "new_val", "old_val2": 123}' title='Enter a JSON object mapping old values (keys) to new values (values). Keys/values should be quoted appropriately.' required></textarea>
+                        <div class="container-border">
+                            <button id="map-values-btn" class="btn btn-outline-secondary w-100 btn-sm" type="button" data-action="map_values">Map / Replace Values</button>
+                        </div>
+                        <div class="form-text">Replaces values based on the provided JSON mapping.</div>
+                    </div>
+                </div>
+            </div>
+
+        </aside> <!-- End Sidebar -->
+        <!-- ================================================== -->
+
+        <!-- Main Content Area (Table) -->
+        <main class="content">
+            <!-- ================================================== -->
+            <!-- Data Actions Toolbar                             -->
+            <!-- ================================================== -->
+            <div class="data-actions-toolbar d-flex justify-content-between align-items-center bg-white border-bottom pb-2 px-3">
+                
+                <!-- Left Group: Formula Bar - Spans available space -->
+                <div class="container-border flex-grow-1 me-3" id="formula-bar-outer-container">
+                    <div class="formula-bar-group d-flex align-items-center bg-white">
+                        <span class="me-2 text-muted small" title="Formula Bar">FX:</span>
+                        <select id="formula-select" class="form-select form-select-sm me-1" style="width: auto; min-width:100px;">
+                            <option value="" selected disabled>-- Formula --</option>
+                            <optgroup label="Numeric">
+                                <option value="SUM">SUM</option>
+                                <option value="AVG">AVG (Mean)</option>
+                                <option value="MEDIAN">MEDIAN</option>
+                                <option value="MIN">MIN</option>
+                                <option value="MAX">MAX</option>
+                                <option value="STDEV">STDEV</option>
+                                <option value="VAR">VAR (Variance)</option>
+                                <option value="SUMSQ">SUMSQ (Sum of Squares)</option>
+                                <option value="RANGE">RANGE (Max-Min)</option>
+                                <option value="PERCENTILE">PERCENTILE(P)</option>
+                                <option value="IQR">IQR</option>
+                                <option value="SKEW">SKEW (Skewness)</option>
+                                <option value="KURT">KURT (Kurtosis)</option>
+                                <option value="CV">CV (Coeff. Variation)</option>
+                            </optgroup>
+                            <optgroup label="Counting">
+                                <option value="COUNT">COUNT (Non-Missing)</option>
+                                <option value="COUNTUNIQUE">COUNTUNIQUE (Distinct)</option>
+                            </optgroup>
+                            <optgroup label="Date/Time">
+                                <option value="DATE_RANGE_DAYS">DATE_RANGE_DAYS</option>
+                                <option value="COMMON_YEAR">COMMON_YEAR</option>
+                                <option value="COMMON_MONTH_NAME">COMMON_MONTH_NAME</option>
+                            </optgroup>
+                            <optgroup label="Text">
+                                <option value="CONCAT_ROWS">CONCAT (Join Rows)</option>
+                                <option value="LEN_AVG">LEN_AVG (Avg Length)</option>
+                                <option value="COUNTEMPTY">COUNTEMPTY (Empty Str)</option>
+                                <option value="COUNTNONEMPTY">COUNTNONEMPTY (Non-Empty Str)</option>
+                                <option value="COUNT_REGEX">COUNT_REGEX(pattern)</option>
+                                <option value="LONGEST_STR_LEN">LONGEST_STR_LEN</option>
+                                <option value="SHORTEST_STR_LEN">SHORTEST_STR_LEN</option>
+                            </optgroup>
+                            <optgroup label="Boolean">
+                                <option value="COUNT_TRUE">COUNT_TRUE</option>
+                                <option value="COUNT_FALSE">COUNT_FALSE</option>
+                                <option value="ALL_TRUE">ALL_TRUE</option>
+                                <option value="ANY_TRUE">ANY_TRUE</option>
+                            </optgroup>
+                            <optgroup label="General">
+                                <option value="MODE">MODE</option>
+                            </optgroup>
+                        </select>
+                        
+                        <!-- New Parameter Input Area (initially hidden) -->
+                        <label id="formula-param-label" for="formula-param-input" class="form-label-sm me-1 mb-0" style="display: none; white-space: nowrap;"></label>
+                        <input type="text" id="formula-param-input" class="form-control form-control-sm me-1" placeholder="Param" style="width: 100px; display: none;" title="Additional parameter for the formula">
+                        
+                        <select id="formula-column-select" class="form-select form-select-sm me-1" style="width: auto; min-width:120px; display: none;" title="Select column for formula">
+                            <!-- Populated by JS -->
+                        </select>
+                        <input type="number" id="formula-row-start" class="form-control form-control-sm me-1" placeholder="Start" style="width: 75px; display: none;" title="Start Row Index (1-based, optional, inclusive)">
+                        <input type="number" id="formula-row-end" class="form-control form-control-sm me-1" placeholder="End" style="width: 75px; display: none;" title="End Row Index (1-based, optional, inclusive)">
+                        <button id="apply-formula-btn" class="btn btn-sm btn-primary" style="display: none;" title="Apply formula">Go</button>
+                        <span id="formula-result" class="ms-2 small flex-shrink-0" style="display: none; font-weight: 500 !important; color: #7612fa !important"></span>
+                    </div>
+                </div>
+
+                <!-- Right Group: Column Operations -->
+                <div class="container-border" id="column-ops-outer-container">
+                    <div class="toolbar-group-right column-ops-group d-flex align-items-center bg-white">
+                        <span class="me-2 text-muted small">Columns:</span>
+                        <button type="button" id="split-btn" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#splitModal" title="Split a text column into multiple columns">
+                            <i class="bi bi-distribute-vertical"></i> Split
+                        </button>
+                        <button type="button" id="combine-btn" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#combineModal" title="Combine multiple columns into one">
+                            <i class="bi bi-union"></i> Combine
+                        </button>
+                        <button type="button" id="rename-btn" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#renameModal" title="Rename a column">
+                            <i class="bi bi-pencil-square"></i> Rename
+                        </button>
+                        <button type="button" id="drop-btn" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dropModal" title="Remove selected columns">
+                            <i class="bi bi-trash"></i> Drop
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- ================================================== -->
+
+            <div id="loading-indicator" class="text-center my-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="data-table-container" class="table-container">
+                {{ table_html | safe }}
+            </div>
+            <!-- ================================================== -->
+            <!-- MODIFIED STATUS BAR with Search Elements           -->
+            <!-- ================================================== -->
+            <div class="status-bar">
+                <div class="d-flex align-items-center flex-grow-1"> <!-- Left group for search and dimensions -->
+                    <div class="search-controls d-flex align-items-center me-3"> <!-- search-controls group -->
+                        <select class="form-select form-select-sm me-1" id="search-column-select" title="Select column to search in">
+                            <option value="" selected disabled>-- Search Column --</option>
+                            {% for col in columns %}
+                            <option value="{{ col }}">{{ col }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" class="form-control form-control-sm me-1" id="search-input" placeholder="Type to search..." list="search-suggestions" autocomplete="off">
+                        <datalist id="search-suggestions"></datalist>
+                        <button class="btn btn-sm btn-outline-danger" id="clear-search-btn" style="display: none;" title="Clear search filter"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                    <div class="ms-2"> <!-- Dimensions. Use ms-2 for spacing -->
+                        <span id="row-count">Rows: {{ total_rows if total_rows is defined else 'N/A' }}</span> |
+                        <span id="col-count">Columns: {{ total_columns if total_columns is defined else 'N/A' }}</span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center ms-auto"> <!-- Right group for messages -->
+                    <span id="search-status-message" class="text-info small me-2" style="display: none;"></span> <!-- Search status message area -->
+                    <span id="message-area" class="text-success fw-bold me-2"></span> <!-- General success messages -->
+                    <span id="error-area" class="text-danger fw-bold"></span> <!-- General error messages -->
+                </div>
+           </div>
+           <!-- ================================================== -->
+        </main>
+
+        <!-- Stats Panel (Initially Hidden) -->
+        <aside class="stats-panel" id="stats-panel">
+            <button type="button" class="btn-close" id="stats-panel-close-btn" aria-label="Close" title="Close Stats Panel"></button>
+            <h5 id="stats-panel-column-name">Column Statistics</h5>
+            <hr>
+            <div id="stats-panel-loading" style="display: none;">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div> Loading...
+            </div>
+            <div id="stats-panel-error" class="alert alert-danger p-2" style="display: none;"></div>
+            <div id="stats-panel-placeholder">
+                <p class="text-muted small">Click a column header in the table to view its statistics here.</p>
+            </div>
+            <div id="stats-content">
+                <!-- Statistics will be dynamically inserted here -->
+            </div>
+            <!-- NEW: Unique Values Section -->
+            <div id="unique-values-section" style="display: none;"> 
+                <h6>Unique Values</h6>
+                <small id="unique-values-count-display" class="count-display-text"></small>
+                <div id="unique-values-container" class="list-scrollable-container">
+                    <p class="placeholder-text">Loading unique values...</p>
+                </div>
+            </div>
+            <!-- NEW: Duplicate Values Section -->
+            <div id="duplicate-values-section" style="display: none;"> 
+                <h6>Duplicate Values</h6>
+                <small id="duplicate-values-count-display" class="count-display-text"></small>
+                <div id="duplicate-values-container" class="list-scrollable-container">
+                    <p class="placeholder-text">Loading duplicate values...</p>
+                </div>
+            </div>
+       </aside> <!-- End Stats Panel -->
+
+       <!-- NEW: Auto Clean Config Panel (Initially Hidden) -->
+        <aside class="config-panel" id="auto-clean-config-panel">
+                <button type="button" class="btn-close" id="config-panel-close-btn" aria-label="Close" title="Close Config Panel"></button>
+                <h5><i class="bi bi-sliders"></i> Auto Clean Configuration</h5>
+                <hr>
+
+                <div id="auto-clean-config-form">
+                    <!-- Outlier Handling -->
+                    <div class="config-section">
+                        <label class="form-label">Outlier Handling (Numerical):</label>
+                        <select class="form-select form-select-sm mb-2" id="config-outlier-handling">
+                            <option value="none" selected>Do Nothing</option>
+                            <option value="clip_iqr">Clip Outliers (IQR)</option>
+                            <option value="remove_iqr">Remove Rows with Outliers (IQR)</option>
+                            <option value="clip_zscore">Clip Outliers (Z-score)</option>
+                            <option value="remove_zscore">Remove Rows with Outliers (Z-score)</option>
+                        </select>
+                        <div id="outlier-factor-group" style="display: none;">
+                            <label for="config-outlier-iqr-factor" class="form-label small">IQR Factor:</label>
+                            <input type="number" class="form-control form-control-sm mb-1" id="config-outlier-iqr-factor" value="1.5" step="0.1" min="0.5">
+                        </div>
+                        <div id="outlier-zscore-group" style="display: none;">
+                            <label for="config-outlier-zscore-threshold" class="form-label small">Z-score Threshold:</label>
+                            <input type="number" class="form-control form-control-sm mb-1" id="config-outlier-zscore-threshold" value="3.0" step="0.1" min="1.0">
+                        </div>
+                        <div class="form-text small">IQR Factor (e.g., 1.5 standard, 3.0 extreme). Z-score Threshold (e.g., 3.0 for ~99.7% data).</div>
+                    </div>
+
+                    <!-- Missing Value Imputation -->
+                    <div class="config-section">
+                        <label class="form-label">Missing Value Imputation:</label>
+                        <div class="mb-2">
+                            <label for="config-missing-numeric" class="form-label small">For Numerical Columns:</label>
+                            <select class="form-select form-select-sm" id="config-missing-numeric">
+                                <option value="median" selected>Median</option>
+                                <option value="mean">Mean</option>
+                                <option value="none">Do Nothing</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="config-missing-other" class="form-label small">For Other Columns (Text, Date, Bool):</label>
+                            <select class="form-select form-select-sm" id="config-missing-other">
+                                <option value="ffill_bfill" selected>Forward Fill then Backward Fill</option>
+                                <option value="none">Do Nothing</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Case Conversion -->
+                    <div class="config-section">
+                        <label for="config-case-change" class="form-label">Change Case (Text/Category Columns):</label>
+                        <select class="form-select form-select-sm" id="config-case-change">
+                            <option value="none" selected>Do Nothing</option>
+                            <option value="lower">To Lowercase</option>
+                            <option value="upper">To Uppercase</option>
+                            <option value="title">To Title Case</option>
+                        </select>
+                    </div>
+
+                    <!-- Toggleable Operations -->
+                    <div class="config-section">
+                        <label class="form-label">General Operations:</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="config-trim-whitespace" checked>
+                            <label class="form-check-label" for="config-trim-whitespace">Trim Whitespace (Text)</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="config-convert-numeric" checked>
+                            <label class="form-check-label" for="config-convert-numeric">Attempt Numeric Conversion (Text)</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="config-convert-datetime" checked>
+                            <label class="form-check-label" for="config-convert-datetime">Attempt Datetime Conversion (Text)</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="config-convert-category" checked>
+                            <label class="form-check-label" for="config-convert-category">Optimize Low-Cardinality to Category</label>
+                        </div>
+                    </div>
+                <hr>
+                    <div class="core-components-bg">
+                        <div class="container-border bg-white" style="border: none;">
+                            <button type="button" class="btn btn-outline-secondary w-100 btn-sm" id="save-auto-clean-config-btn">Save Config to Session</button>
+                        </div>
+                    </div>
+                    <div class="form-text text-center mt-1">Config applies when "Auto Clean" is next used.</div>
+                </div>
+        </aside> <!-- End Config Panel -->
+
+        <!-- NEW: Outlier Ranges Panel -->
+        <aside class="outlier-ranges-panel" id="outlier-ranges-panel">
+            <button type="button" class="btn-close" id="outlier-ranges-panel-close-btn" aria-label="Close" title="Close Ranges Panel"></button>
+            <h5><i class="bi bi-rulers"></i> Outlier Detection Ranges</h5>
+            <hr>
+            <div id="outlier-ranges-loading" class="text-center my-3" style="display: none;">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div> Loading ranges...
+            </div>
+            <div id="outlier-ranges-error" class="alert alert-danger p-2 small" style="display: none;"></div>
+            <div id="outlier-ranges-placeholder" class="text-muted small">
+                <p>Calculated ranges for numerical columns will appear here.</p>
+            </div>
+            <div class="accordion" id="outlier-ranges-accordion">
+                <!-- Accordion items will be populated by JavaScript -->
+            </div>
+        </aside>
+       
+    </div>
+
+     <!-- Toast Container for Notifications -->
+    <div class="toast-container"></div>
+    
+
+    <!-- ================================================== -->
+    <!-- MODALS for Toolbar Actions                       -->
+    <!-- ================================================== -->
+
+    <!-- Filter Modal -->
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel"><i class="bi bi-funnel"></i> Filter Rows</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="filter-modal-form"> 
+                        <div class="mb-3">
+                            <label for="modal-filter-column" class="modal-form-label">Column:</label>
+                            <select class="form-select form-select-sm" id="modal-filter-column" required>
+                                <option value="" selected disabled>-- Select Column --</option>
+                                {% for col in columns %} <option value="{{ col }}">{{ col }}</option> {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modal-filter-condition" class="modal-form-label">Condition:</label>
+                            <select class="form-select form-select-sm" id="modal-filter-condition" required title="Select the comparison condition.">
+                                <option value="" selected disabled>-- Select Condition --</option>
+                                <option value="==">Equals (=)</option>
+                                <option value="!=">Not Equals (!=)</option>
+                                <option value=">">Greater Than (>)</option>
+                                <option value="<">Less Than (<)</option>
+                                <option value=">=">Greater Than or Equals (>=)</option>
+                                <option value="<=">Less Than or Equals (<=)</option>
+                                <option value="contains">Contains (text)</option>
+                                <option value="startswith">Starts With (text)</option>
+                                <option value="endswith">Ends With (text)</option>
+                                <option value="isnull">Is Null (Missing)</option>
+                                <option value="notnull">Is Not Null</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modal-filter-value" class="modal-form-label">Value:</label>
+                            <input type="text" class="form-control form-control-sm" id="modal-filter-value" placeholder="Value for comparison (if needed)" title="Not needed for Is Null/Not Null.">
+                            <div class="form-text">Enter the value to compare against. Type will be inferred if possible.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modal-filter-action" class="modal-form-label">Action:</label>
+                            <select class="form-select form-select-sm" id="modal-filter-action">
+                                <option value="keep" selected>Keep Matching Rows</option>
+                                <option value="remove">Remove Matching Rows</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <div class="container-border">
+                        <button type="button" id="close-modal-btn" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="apply-filter-btn" data-action="filter_rows">Apply Filter</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sort Modal -->
+    <div class="modal fade" id="sortModal" tabindex="-1" aria-labelledby="sortModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="sortModalLabel"><i class="bi bi-sort-alpha-down"></i> Sort Data</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="sort-modal-form">
+                <div class="mb-3">
+                    <label for="modal-sort-cols" class="modal-form-label">Sort By Columns:</label>
+                    <select class="form-select form-select-sm" id="modal-sort-cols" multiple required title="Select one or more columns (Ctrl/Cmd + Click). Order matters.">
+                        {% for col in columns %} <option value="{{ col }}">{{ col }}</option> {% endfor %}
+                    </select>
+                     <div class="form-text">Select columns in the desired sorting priority order.</div>
+                </div>
+                 <div class="mb-3">
+                     <label for="modal-sort-ascending" class="modal-form-label">Order:</label>
+                     <select class="form-select form-select-sm" id="modal-sort-ascending" title="Select sort order. Applies to all selected columns.">
+                         <option value="true" selected>Ascending (A-Z, 1-9)</option>
+                         <option value="false">Descending (Z-A, 9-1)</option>
+                     </select>
+                 </div>
+             </form>
+          </div>
+          <div class="modal-footer">
+            <div class="container-border">
+                <button type="button" id="close-modal-btn" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="apply-sort-btn" data-action="sort_values">Apply Sort</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Split Column Modal -->
+    <div class="modal fade" id="splitModal" tabindex="-1" aria-labelledby="splitModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="splitModalLabel"><i class="bi bi-distribute-vertical"></i> Split Column</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+             <form id="split-modal-form">
+                <div class="mb-3">
+                    <label for="modal-split-column" class="modal-form-label">Column to Split:</label>
+                    <select class="form-select form-select-sm" id="modal-split-column" required>
+                         <option value="" selected disabled>-- Select Text Column --</option>
+                         {% for col in columns %} <option value="{{ col }}">{{ col }}</option> {% endfor %}
+                     </select>
+                </div>
+                 <div class="mb-3">
+                     <label for="modal-split-delimiter" class="modal-form-label">Delimiter:</label>
+                     <input type="text" class="form-control form-control-sm" id="modal-split-delimiter" placeholder="e.g., ',', '-', ' '" title="Character(s) to split by." required>
+                 </div>
+                <div class="mb-3">
+                    <label for="modal-split-new-names" class="modal-form-label">New Column Names (Optional):</label>
+                    <input type="text" class="form-control form-control-sm" id="modal-split-new-names" placeholder="Comma-separated, e.g., name_first, name_last" title="Provide comma-separated names. Number must match split result. If blank, defaults are used.">
+                     <div class="form-text">If provided, the number of names must match the number of columns created by the split.</div>
+                </div>
+             </form>
+          </div>
+          <div class="modal-footer">
+            <div class="container-border">
+                <button type="button" id="close-modal-btn" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="apply-split-btn" data-action="split_column">Apply Split</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Combine Columns Modal -->
+     <div class="modal fade" id="combineModal" tabindex="-1" aria-labelledby="combineModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="combineModalLabel"><i class="bi bi-union"></i> Combine Columns</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+             <form id="combine-modal-form">
+                <div class="mb-3">
+                    <label for="modal-combine-cols" class="modal-form-label">Columns to Combine:</label>
+                    <select class="form-select form-select-sm" id="modal-combine-cols" multiple required title="Select two or more columns (Ctrl/Cmd + Click). Order matters for combination.">
+                        {% for col in columns %} <option value="{{ col }}">{{ col }}</option> {% endfor %}
+                    </select>
+                     <div class="form-text">Select columns in the order you want them combined.</div>
+                </div>
+                 <div class="mb-3">
+                     <label for="modal-combine-new-name" class="modal-form-label">New Column Name:</label>
+                     <input type="text" class="form-control form-control-sm" id="modal-combine-new-name" placeholder="Required" required>
+                 </div>
+                <div class="mb-3">
+                    <label for="modal-combine-separator" class="modal-form-label">Separator (Optional):</label>
+                    <input type="text" class="form-control form-control-sm" id="modal-combine-separator" placeholder="e.g., ' ', '-', ', '" title="Character(s) to place between combined values.">
+                </div>
+             </form>
+          </div>
+          <div class="modal-footer">
+            <div class="container-border">
+                <button type="button" id="close-modal-btn" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="apply-combine-btn" data-action="combine_columns">Apply Combine</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rename Column Modal -->
+    <div class="modal fade" id="renameModal" tabindex="-1" aria-labelledby="renameModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="renameModalLabel"><i class="bi bi-pencil-square"></i> Rename Column</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="rename-modal-form">
+                <div class="mb-3">
+                    <label for="modal-rename-old-name" class="modal-form-label">Column to Rename:</label>
+                    <select class="form-select form-select-sm" id="modal-rename-old-name" required>
+                         <option value="" selected disabled>-- Select Column --</option>
+                         {% for col in columns %} <option value="{{ col }}">{{ col }}</option> {% endfor %}
+                     </select>
+                </div>
+                 <div class="mb-3">
+                     <label for="modal-rename-new-name" class="modal-form-label">New Column Name:</label>
+                     <input type="text" class="form-control form-control-sm" id="modal-rename-new-name" placeholder="Enter new name" required>
+                 </div>
+             </form>
+          </div>
+          <div class="modal-footer">
+            <div class="container-border">
+                <button type="button" id="close-modal-btn" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="apply-rename-btn" data-action="rename_column">Apply Rename</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drop Columns Modal -->
+    <div class="modal fade" id="dropModal" tabindex="-1" aria-labelledby="dropModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="dropModalLabel"><i class="bi bi-trash"></i> Drop Columns</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="drop-modal-form">
+                <div class="mb-3">
+                    <label for="modal-drop-cols" class="modal-form-label">Columns to Drop:</label>
+                     <select class="form-select form-select-sm" id="modal-drop-cols" multiple required title="Select one or more columns to remove (Ctrl/Cmd + Click).">
+                        {% for col in columns %} <option value="{{ col }}">{{ col }}</option> {% endfor %}
+                    </select>
+                    <div class="form-text text-danger">Warning: This action permanently removes the selected columns.</div>
+                </div>
+             </form>
+          </div>
+          <div class="modal-footer">
+            <div class="container-border">
+                <button type="button" id="close-modal-btn" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="apply-drop-btn" data-action="drop_columns">Drop Selected</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Report an Issue Button -->
+    <a href="https://tally.so/r/w7gWkR" target="_blank" rel="noopener noreferrer" class="floating-report-btn">
+        <span class="report-text">Report an issue</span>
+        <i class="bi bi-bug-fill report-icon"></i>
+    </a>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/cleaning.js') }}"></script>
+</body>
+</html>

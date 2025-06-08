@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ plan.name }} Details - DataWarp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            padding-top: 5rem; /* For fixed navbar */
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+            background-color: #f8f9fa; /* Light page background */
+            color: #212529; /* Default text color */
+        }
+
+        /* Navbar Styles (consistent with other pages) */
+        .navbar {
+            border-width: 2px; border-bottom-style: solid;
+            border-image: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3) 1;
+            background-color: #fff !important;
+        }
+        .navbar-brand { font-size: 1.625rem; font-weight: 900; color: #000 !important; }
+        .navbar .nav-link { color: #212529 !important; font-weight: 500; }
+        .navbar .nav-link:hover { color: #7612fa !important; }
+        .user-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1rem; cursor: pointer;
+            border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c0d2ff 100%); /* Light blue gradient */
+            padding: 4rem 0;
+            margin-bottom: 3rem;
+            color: #0a192f; /* Dark blue text for contrast */
+        }
+        .hero-section .hero-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+            flex-wrap: wrap; /* Allow wrapping */
+        }
+        .hero-section .hero-text {
+            flex: 1;
+            min-width: 300px;
+        }
+        .hero-section .hero-text h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .hero-section .hero-text p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            max-width: 500px;
+        }
+        .hero-section .hero-image-container {
+            flex: 1;
+            min-width: 300px;
+            text-align: center; /* Center image if it's smaller */
+        }
+        .hero-section .hero-image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .hero-section .btn-buy {
+            background-color: #0d6efd; /* Bootstrap primary blue */
+            color: white;
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+        .hero-section .btn-buy:hover {
+            background-color: #0b5ed7;
+        }
+        .hero-section .cart-info {
+            font-size: 0.85rem;
+            margin-top: 0.75rem;
+            color: #333;
+        }
+
+        /* Plan Overview Section */
+        .plan-overview-section {
+            padding: 2rem 0;
+            margin-bottom: 3rem;
+        }
+        .plan-overview-header h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .plan-overview-header .company-name {
+            font-size: 1rem;
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+        .plan-highlights {
+            list-style: none;
+            padding-left: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .plan-highlights li {
+            font-size: 0.95rem;
+            color: #495057;
+            display: flex;
+            align-items: center;
+        }
+        .plan-highlights li .bi {
+            font-size: 1.2rem;
+            color: #7612fa; /* Theme color for icons */
+            margin-right: 0.5rem;
+        }
+        .plan-description-full {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #343a40;
+            margin-bottom: 2rem;
+        }
+        .plan-features-list {
+            list-style: disc;
+            padding-left: 1.5rem; /* Indent for bullet points */
+        }
+        .plan-features-list li {
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .plan-pricing-actions {
+            background-color: #f1f3f5; /* Light grey box for pricing */
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+        .plan-pricing-actions .price-display {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #0a192f;
+        }
+        .plan-pricing-actions .btn-buy {
+            width: 100%;
+            margin-bottom: 0.75rem;
+            background-color: #0d6efd; color: white; padding: 0.6rem 1.5rem; font-size: 1rem;
+        }
+        .plan-pricing-actions .btn-buy-monthly {
+            width: 100%;
+            background-color: #6c757d; color: white; padding: 0.6rem 1.5rem; font-size: 1rem;
+        }
+        .plan-pricing-actions .text-divider {
+            text-align: center;
+            margin: 0.75rem 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .plan-pricing-actions .subscription-terms {
+            font-size: 0.8rem;
+            color: #6c757d;
+            text-align: center;
+        }
+
+        /* Summary of Benefits Section */
+        .benefits-summary-section {
+            background-color: #ffffff; /* White background for this section */
+            padding: 3rem 0;
+            border-top: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .benefits-summary-section h2 {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 2.5rem;
+        }
+        .benefit-item {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .benefit-item .benefit-icon .bi {
+            font-size: 2.5rem; /* Larger icons */
+            color: #7612fa; /* Theme color */
+        }
+        .benefit-item .benefit-text h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .benefit-item .benefit-text p {
+            font-size: 0.95rem;
+            color: #495057;
+            line-height: 1.6;
+        }
+
+        /* Legal Text / Footer Info */
+        .legal-info {
+            padding: 2rem 0;
+            font-size: 0.85rem;
+            color: #6c757d;
+            line-height: 1.5;
+        }
+        .legal-info a {
+            color: #7612fa;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top">
+        <div class="container-fluid align-items-center">
+            <img src="{{ url_for('static', filename='img/logomain.png') }}" class="logo-img me-2 ms-3" alt="DataWarp Logo" style="height: 25px;">
+            <a class="navbar-brand" href="{{ url_for('index') }}">DataWarp</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavProDetails" aria-controls="navbarNavProDetails" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon" style="background-image: url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0, 0, 0, 0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e\");"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavProDetails">
+                 <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                     {% if current_user %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">Home/Upload</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('clean_data_interface') }}">Clean Data</a>
+                    </li>
+                     <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('subscription_plans') }}">Subscription Plans</a>
+                    </li>
+                     {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link" href="#" id="userDropdownPro" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="user-avatar">
+                                    {{ current_user_display_name[0]|upper if current_user_display_name else 'U' }}
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdownPro">
+                                <li><a class="dropdown-item" href="{{ url_for('account') }}"><i class="bi bi-gear-fill me-2"></i>Account Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-image-container">
+                    <!-- Replace with an actual relevant image for DataWarp Pro -->
+                    <img src="https://via.placeholder.com/500x350.png?text=DataWarp+Pro+Showcase" alt="{{ plan.name }} Showcase">
+                </div>
+                <div class="hero-text">
+                    <h1>{{ plan.name }}</h1>
+                    <p>Unlock the full potential of your data with advanced AI, automation, and collaborative tools designed for professionals and teams.</p>
+                    <a href="{{ plan.buttons.choose_link }}" class="btn btn-buy">Buy and Download</a>
+                    <p class="cart-info">{{ plan.name }} (Yearly Billing) will be added to cart for your review.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Plan Overview Section -->
+    <section class="plan-overview-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="plan-overview-header">
+                        <h2>{{ plan.name }}</h2>
+                        <p class="company-name">DataWarp Inc.</p>
+                    </div>
+                    <ul class="plan-highlights">
+                        <li><i class="bi bi-pc-display-horizontal"></i> For Power Users & Teams</li>
+                        <li><i class="bi bi-cloud-arrow-up-fill"></i> Up to {{ plan.features[-2].split(' ')[0] }} storage</li> <!-- Assuming storage is second to last feature -->
+                        <li><i class="bi bi-people-fill"></i> For up to 5 people (if applicable)</li>
+                    </ul>
+                    <p class="plan-description-full">
+                        {{ plan.name }} is our premium subscription offering the most comprehensive suite of tools for data cleaning, transformation, and quality assurance.
+                        It includes advanced AI-powered suggestions, automation for data pipelines, collaborative features for teams, and priority support to ensure you get the most out of your data.
+                    </p>
+                    <h4>Key Features:</h4>
+                    <ul class="plan-features-list">
+                        {% for feature in plan.features %}
+                            <li>{{ feature }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <div class="plan-pricing-actions mt-4 mt-lg-0">
+                        <div class="price-display">
+                            {{ plan.currency_symbol }}{{ plan.yearly_price_usd }}.00/year incl. tax
+                        </div>
+                        <a href="{{ plan.buttons.choose_link }}?billing=yearly" class="btn btn-buy">Buy now (Yearly)</a>
+                        <div class="text-divider">Or</div>
+                        <a href="{{ plan.buttons.choose_link }}?billing=monthly" class="btn btn-buy-monthly">Buy now {{ plan.currency_symbol }}{{ plan.monthly_price_usd }}.00/month</a>
+                        <p class="subscription-terms mt-2">Subscription continues to be charged unless canceled in your DataWarp account.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary of Benefits Section -->
+    {% if plan.detailed_benefits %}
+    <section class="benefits-summary-section">
+        <div class="container">
+            <h2>Summary of benefits</h2>
+            <div class="row">
+                {% for benefit in plan.detailed_benefits %}
+                <div class="col-md-6">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="{{ benefit.icon }}"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <h4>{{ benefit.title }}</h4>
+                            <p>{{ benefit.description }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Legal Info / Footer -->
+    <section class="legal-info">
+        <div class="container">
+            <p>
+                AI image creation and advanced features are only available to the subscription owner and usage limits apply.
+                App availability varies by device/language. Features vary by platform and region. Minimum age limits may apply to use of AI features.
+                Visit <a href="#">DataWarp Terms of Service</a> for more information.
+            </p>
+             <p class="text-center mt-3"><a href="{{ url_for('subscription_plans') }}">Back to All Plans</a></p>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+</body>
+</html>

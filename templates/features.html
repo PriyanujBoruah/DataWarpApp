@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Data Features & Patterns</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- Base & Layout --- */
+        body {
+            font-size: 14px;
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+        }
+
+        /* Main layout for sidebar and content */
+        .main-container {
+            display: flex;
+            height: calc(100vh); /* Full height minus navbar's actual height */
+        }
+
+        .sidebar {
+            width: 300px;
+            flex-shrink: 0;
+            padding: 1.5rem 1rem;
+            border-right: 1px solid #e0e0e0;
+            background-color: #ffffff;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.03);
+        }
+        .sidebar h6 {
+            font-weight: 700; margin-bottom: 1.2rem; padding-bottom: 0.6rem;
+            border-bottom: 2px solid #7612fa; color: #343a40;
+            font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .sidebar .list-group-item {
+            border: none; padding: 0.8rem 1.2rem; font-size: 0.9rem;
+            color: #495057; background-color: transparent;
+            border-radius: 0.375rem; margin-bottom: 0.3rem;
+            transition: background-color 0.2s ease, color 0.2s ease; cursor: pointer;
+        }
+        .sidebar .list-group-item i {
+            margin-right: 0.8rem; color: #7612fa;
+            width: 1.2em; text-align: center;
+        }
+        .sidebar .list-group-item.active {
+            background-image: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3);
+            color: white; font-weight: 600;
+            box-shadow: 0 2px 8px rgba(118, 18, 250, 0.3);
+        }
+        .sidebar .list-group-item.active i { color: white; }
+        .sidebar .list-group-item:hover:not(.active) {
+            background-color: #f1f3f5; color: #212529;
+        }
+
+        .content {
+            flex-grow: 1;
+            padding: 1.5rem 2rem;
+            overflow-y: auto;
+            background-color: #FFFFFF;
+        }
+        .feature-section .card { margin-bottom: 2rem; border: 1px solid #e0e0e0; border-radius: 14px !important; }
+        .card-header { font-weight: 600; background-color: #FFFFFF; font-size: 1.05rem; padding: 0.75rem 1.25rem;}
+        .card-subheader { font-weight: 500; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 0.95rem; color: #495057;}
+        code { font-size: 0.85em; padding: 0.15em 0.4em; background-color: #F1F1F9; border-radius: 3px; color: #7612fa; word-break: break-all; }
+        ul.list-unstyled li { margin-bottom: 0.4rem; }
+        ul.list-inline li { margin-right: 8px; margin-bottom: 5px; display: inline-block;}
+        .list-group-item { font-size: 0.9rem; padding: 0.6rem 1rem; border-left: 0; border-right: 0;} /* For inner list groups */
+        .list-group-flush > .list-group-item:last-child { border-bottom-width: 0;}
+        .badge { font-weight: 500;}
+        .container-border { padding: .3125rem; border: 1px solid #ceceea; border-radius: 14px;}
+        .bottom-color-border {border-width: 2px; border-bottom-style: solid; border-image: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3) 1;}
+        
+        .highlight-issue { color: #dc3545; font-weight: bold; }
+        .highlight-warning { color: #fd7e14; font-weight: bold; }
+        .highlight-info { color: #0d6efd; font-weight: bold; }
+        .text-muted { color: #6c757d !important; }
+        .section-icon { margin-right: 0.6rem; vertical-align: middle; font-size: 1.3em; color: #495057;}
+        .comment { font-size: 0.85em; color: #555; font-style: italic; display: block; margin-left: 0.5em;}
+
+        #back-btn, #visualize-btn { border: none; border-radius: .5625rem !important; font-size: .875rem !important; color: #24223e !important; }
+        #back-btn:hover, #visualize-btn:hover { background-color: #F1F1F9 !important; }
+        .value-counts-list li { display: flex; justify-content: space-between; font-size: 0.85em; margin-bottom: 0.2rem;}
+        .value-counts-list .vc-value { flex-basis: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .value-counts-list .vc-count { flex-basis: 30%; text-align: right; font-weight: 500;}
+        .correlation-list li { margin-bottom: 0.3rem; }
+        .table-grouped-stats { font-size: 0.8rem; margin-bottom: 1rem !important; }
+        .table-grouped-stats thead th { background-color: #f8f9fa; font-weight: 600; }
+        .table-grouped-stats th, .table-grouped-stats td { padding: 0.3rem 0.5rem; vertical-align: middle; }
+        .suggestions-list .list-group-item { padding-left: 1.25rem; }
+        .quantile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 0.5rem; }
+        .quantile-grid > div { text-align: center; background-color: #f8f9fa; padding: 0.2rem; border-radius: 0.2rem;}
+        .quantile-grid > div > strong { display: block; font-size: 0.8em; color: #555; }
+
+        /* --- Floating Brand Styles --- */
+        #floating-brand {
+            position: fixed;
+            bottom: 20px;
+            left: 25px;
+            z-index: 1040; /* Below modals, above most content */
+        }
+        #floating-brand a {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #343a40 !important;
+            opacity: 0.6;
+            transition: opacity 0.2s ease-in-out;
+        }
+        #floating-brand a:hover {
+            opacity: 1;
+        }
+        
+        @media (max-width: 992px) {
+            body { padding-top: 5rem; }
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar {
+                width: 100%; height: auto; border-right: none;
+                border-bottom: 1px solid #e0e0e0; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                max-height: none;
+            }
+            .content { padding: 1.5rem; }
+        }
+        @media (max-width: 768px) {
+            .content { padding: 1rem; }
+            .sidebar h6 { font-size: 1rem; }
+            .sidebar .list-group-item { padding: 0.7rem 1rem; font-size: 0.9rem; }
+            .card-header { font-size: 1rem; padding: 0.6rem 1rem; }
+        }
+
+
+
+        /* --- FLOATING REPORT ISSUE BUTTON --- */
+        .floating-report-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 1050;
+            display: flex;
+            align-items: center;
+            background-color: #7612fa; /* Start with brand purple */
+            color: #fff;
+            padding: 10px;
+            border-radius: 50px; /* Pill shape */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-decoration: none;
+            transition: all 0.3s ease-in-out;
+            overflow: hidden; /* Important for containing the expanding text */
+        }
+
+        .floating-report-btn .report-text {
+            max-width: 0;
+            opacity: 0;
+            white-space: nowrap;
+            transition: max-width 0.3s ease-in-out, opacity 0.2s ease-in-out 0.1s; /* Delay opacity transition */
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding-left: 0; /* No padding initially */
+        }
+
+        .floating-report-btn .report-icon {
+            font-size: 1.5rem;
+            line-height: 1;
+            margin-left: 5px; /* Give icon some space */
+        }
+
+        .floating-report-btn:hover {
+            background: linear-gradient(100deg, #40ddff -6.08%, #7612fa 25.08%, #fa12e3);
+            box-shadow: 0 6px 20px rgba(118, 18, 250, 0.3);
+        }
+
+        .floating-report-btn:hover .report-text {
+            max-width: 150px; /* Expand to this width */
+            opacity: 1;
+            padding-left: 8px; /* Add space between text and icon */
+            padding-right: 5px;
+        }
+        .floating-report-btn:hover .report-icon {
+            margin-left: 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top" style="height: 3.5rem;">
+        <div class="container-fluid align-items-center">
+            <!-- Branding has been moved to a floating element at the bottom-left -->
+            <div class="ms-auto d-flex align-items-center">
+                <div class="container-border bg-white me-2">
+                    <a id="visualize-btn" href="{{ url_for('visualize_data') }}" class="btn btn-sm btn-outline-light me-2" title="Visualize data patterns">
+                        <i class="bi bi-bar-chart-line"></i> Visualize
+                    </a>
+                    <a id="back-btn" href="{{ url_for('clean_data_interface') }}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-tools"></i> Back to Cleaning
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container" id="main-content-wrapper">
+        <aside class="sidebar">
+            <h6><i class="bi bi-card-checklist"></i> Feature Sections</h6>
+            <div class="list-group list-group-flush" id="feature-toggles">
+                <a class="list-group-item list-group-item-action active" href="#" data-target-id="all">
+                    <i class="bi bi-eye-fill"></i>All Sections
+                </a>
+                
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="overview-quality">
+                    <i class="bi bi-grid-3x3-gap"></i>Overview & Quality
+                </a>
+                
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="types-cardinality">
+                    <i class="bi bi-tags"></i>Types & Cardinality
+                </a>
+
+                {% if summary.numeric_col_details %}
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="numerical-patterns">
+                    <i class="bi bi-graph-up"></i>Numerical Patterns
+                </a>
+                {% endif %}
+
+                {% if summary.categorical_col_details %}
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="text-categorical-patterns">
+                    <i class="bi bi-fonts"></i>Text & Categorical
+                </a>
+                {% endif %}
+
+                {% if summary.datetime_cols %}
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="datetime-patterns">
+                    <i class="bi bi-calendar-week"></i>Date/Time Patterns
+                </a>
+                {% endif %}
+
+                {% if 'pearson_positive' in summary or 'correlation_info' in summary or 'correlation_error' in summary %}
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="correlation-analysis">
+                    <i class="bi bi-link-45deg"></i>Correlation Analysis
+                </a>
+                {% endif %}
+
+                {% if summary.grouped_stats %}
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="grouped-analysis">
+                    <i class="bi bi-bar-chart-steps"></i>Grouped Analysis
+                </a>
+                {% endif %}
+                
+                {% if summary.engineering_suggestions %}
+                <a class="list-group-item list-group-item-action" href="#" data-target-id="suggestions">
+                    <i class="bi bi-lightbulb"></i>Suggestions
+                </a>
+                {% endif %}
+            </div>
+        </aside>
+
+        <main class="content">
+            <!-- Source Info -->
+            <p class="text-muted mb-3"><small>Source: {{ source_info | default('N/A') }}</small></p>
+
+            <!-- Display Error if Calculation Failed -->
+            {% if error_message %}
+                <div class="alert alert-danger" role="alert">
+                <strong><i class="bi bi-exclamation-triangle-fill me-2"></i>Error Calculating Features:</strong> {{ error_message }}
+                </div>
+            {% endif %}
+
+            {% if summary and summary|length > 0 %}
+                <!-- Each section below is wrapped in a div with class "feature-section" and a unique ID -->
+
+                <div class="feature-section" id="overview-quality-section">
+                    <div class="card mb-4">
+                        <div class="card-header bottom-color-border"><i class="bi bi-grid-3x3-gap-fill section-icon"></i>Dataset Overview & Quality</div>
+                        <div class="card-body">
+                            <div class="row mb-3 gy-2">
+                                <div class="col-md-3"><strong>Rows:</strong> {{ summary.rows | default('N/A') }}</div>
+                                <div class="col-md-3"><strong>Columns:</strong> {{ summary.columns | default('N/A') }}</div>
+                                <div class="col-md-3"><strong>Cells:</strong> {{ summary.total_cells | default('N/A') }}</div>
+                                <div class="col-md-3"><strong>Memory:</strong> {{ summary.total_memory | default('N/A') }}</div>
+                            </div>
+                            <div class="row gy-2">
+                                <div class="col-md-4"><strong>Duplicate Rows:</strong> <span class="{{ 'highlight-issue' if summary.duplicate_rows_raw > 0 else '' }}">{{ summary.duplicate_rows | default('N/A') }}</span></div>
+                                <div class="col-md-4"><strong>Missing Cells:</strong> <span class="{{ 'highlight-issue' if summary.total_missing_raw > 0 else '' }}">{{ summary.total_missing | default('N/A') }}</span></div>
+                                <div class="col-md-4"><strong>Missing Cells %:</strong> <span class="{{ 'highlight-issue' if (summary.missing_percentage[:-1]|float(default=0)) > 10 else ('highlight-warning' if (summary.missing_percentage[:-1]|float(default=0)) > 0 else '') }}">{{ summary.missing_percentage | default('N/A') }}</span></div>
+                            </div>
+                            {% if summary.memory_by_type %}
+                                <hr class="my-3">
+                                <h6 class="card-subheader mb-2">Memory Usage by Data Type:</h6>
+                                <ul class="list-inline mb-0 small">
+                                    {% for dtype, mem_str in summary.memory_by_type.items() %}
+                                    <li class="list-inline-item border rounded px-2 py-1 mb-1">
+                                        <code>{{ dtype }}</code>: <span class="text-muted">{{ mem_str }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            {% if summary.high_missing_cols or summary.constant_value_cols or summary.mixed_type_cols or summary.warning_missing_cols %}
+                                <hr class="my-3">
+                                <h6 class="card-subheader mb-2">Potential Data Quality Issues:</h6>
+                                <ul class="list-unstyled mb-0 small">
+                                    {% if summary.high_missing_cols %}
+                                        <li><i class="bi bi-exclamation-diamond-fill text-danger me-1"></i><strong>High Missing (>{{ (high_missing_threshold * 100)|int }}%):</strong> Columns <code>{{ summary.high_missing_cols | join(', ') }}</code></li>
+                                    {% endif %}
+                                    {% if summary.warning_missing_cols %}
+                                        <li><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i><strong>Moderate Missing (>{{ (warning_missing_threshold * 100)|int }}%):</strong> Columns <code>{{ summary.warning_missing_cols | join(', ') }}</code></li>
+                                    {% endif %}
+                                    {% if summary.constant_value_cols %}
+                                        <li><i class="bi bi-pause-btn text-warning me-1"></i><strong>Constant Value:</strong> Columns <code>{{ summary.constant_value_cols | join(', ') }}</code></li>
+                                    {% endif %}
+                                    {% if summary.mixed_type_cols %}
+                                        <li><i class="bi bi-shuffle text-danger me-1"></i><strong>Potential Mixed Types:</strong> Columns <code>{{ summary.mixed_type_cols | join(', ') }}</code></li>
+                                    {% endif %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-section" id="types-cardinality-section">
+                    <div class="card mb-4">
+                         <div class="card-header bottom-color-border"><i class="bi bi-tags-fill section-icon"></i>Column Types & Cardinality</div>
+                         <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-5 mb-4 mb-lg-0">
+                                    <h6 class="card-subheader mt-0">Data Type Counts</h6>
+                                    {% if summary.column_types %}
+                                        <ul class="list-group list-group-flush">
+                                            {% for dtype, count_str in summary.column_types.items() %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <code>{{ dtype }}</code> <span class="badge bg-secondary rounded-pill">{{ count_str }}</span>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %} <p class="text-muted mb-0">N/A</p> {% endif %}
+                                </div>
+                                <div class="col-lg-7">
+                                    <h6 class="card-subheader mt-0">Cardinality Insights</h6>
+                                    {% if summary.low_cardinality_cols_list %}
+                                        <p class="mb-1"><strong>Low Cardinality Columns <small>(<=10 unique or <2% unique)</small>:</strong></p>
+                                        <ul class="list-inline mb-2">
+                                            {% for col in summary.low_cardinality_cols_list %} <li class="list-inline-item"><code>{{ col }}</code></li> {% endfor %}
+                                        </ul>
+                                        <p class="small text-muted"><em>Suggests: Convert to 'Category' type, consider Encoding for ML.</em></p>
+                                    {% else %}
+                                        <p class="text-muted mb-3">No low cardinality columns identified.</p>
+                                    {% endif %}
+                                    <hr class="my-2">
+                                    {% if summary.id_like_cols %} {# Assuming id_like_cols is populated in Python #}
+                                        <p class="mb-1"><strong>Potential ID Columns <small>(High unique text)</small>:</strong></p>
+                                        <ul class="list-inline mb-0">
+                                            {% for col in summary.id_like_cols %} <li class="list-inline-item"><code>{{ col }}</code></li> {% endfor %}
+                                        </ul>
+                                        <p class="small text-muted"><em>Suggests: Verify uniqueness, likely exclude from direct model training.</em></p>
+                                    {% else %}
+                                        <p class="text-muted mb-0">No obvious text-based ID columns identified.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+
+                {% if summary.numeric_col_details %}
+                <div class="feature-section" id="numerical-patterns-section">
+                    <div class="card mb-4">
+                        <div class="card-header bottom-color-border"><i class="bi bi-graph-up section-icon"></i>Numerical Column Patterns</div>
+                        <div class="card-body">
+                            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                                {% for col, details in summary.numeric_col_details.items() %}
+                                <div class="col d-flex"> <!-- d-flex for align-items-stretch -->
+                                    <div class="card h-100 shadow-sm w-100"> <!-- w-100 to fill col -->
+                                        <div class="card-header"><code>{{ col }}</code></div>
+                                        <ul class="list-group list-group-flush small">
+                                            <!-- Basic Descriptive Stats -->
+                                            <li class="list-group-item">
+                                                <div class="row gx-1 gy-0">
+                                                    <div class="col-6"><strong>Min:</strong> {{ details.min if details.min != 'N/A' else '<span class="text-muted">N/A</span>'|safe }}</div>
+                                                    <div class="col-6"><strong>Max:</strong> {{ details.max if details.max != 'N/A' else '<span class="text-muted">N/A</span>'|safe }}</div>
+                                                    <div class="col-6"><strong>Mean:</strong> {{ details.mean if details.mean != 'N/A' else '<span class="text-muted">N/A</span>'|safe }}</div>
+                                                    <div class="col-6"><strong>Median:</strong> {{ details.median if details.median != 'N/A' else '<span class="text-muted">N/A</span>'|safe }}</div>
+                                                    <div class="col-6"><strong>Std Dev:</strong> {{ details.std if details.std != 'N/A' else '<span class="text-muted">N/A</span>'|safe }}</div>
+                                                    <div class="col-6"><strong>Variance:</strong> {{ details.variance if details.variance != 'N/A' else '<span class="text-muted">N/A</span>'|safe }}</div>
+                                                </div>
+                                            </li>
+                                            <!-- Skewness & Kurtosis -->
+                                            <li class="list-group-item">
+                                                <strong class="d-block">Distribution Shape:</strong>
+                                                {% if details.skewness is defined and details.skewness != 'N/A' and details.skewness != 'Error' %}
+                                                    <span class="{{ 'highlight-warning' if details.skewness|abs > 1 else '' }}">{{ details.skew_comment | default('') }}</span> (Skew={{ details.skewness }})<br>
+                                                {% else %} <span class="text-muted">Skew: {{ details.skewness | default('N/A') }}</span><br> {% endif %}
+                                                {% if details.kurtosis is defined and details.kurtosis != 'N/A' and details.kurtosis != 'Error' %}
+                                                    <span class="{{ 'highlight-info' if details.kurtosis|abs > kurtosis_threshold else '' }}">{{ details.kurtosis_comment | default('') }}</span> (Kurt={{ details.kurtosis }})
+                                                {% else %} <span class="text-muted">Kurt: {{ details.kurtosis | default('N/A') }}</span> {% endif %}
+                                            </li>
+                                            <!-- Normality Tests Display -->
+                                            <li class="list-group-item">
+                                                <strong class="d-block mb-1">Normality Tests (α={{ summary.normality_alpha|default(0.05) }}):</strong>
+                                                {% if details.normality_tests.common_message %}
+                                                    <span class="text-muted">{{ details.normality_tests.common_message }}</span>
+                                                {% elif details.normality_tests %}
+                                                    {% for test_name, result in details.normality_tests.items() %}
+                                                    <div class="normality-test-item">
+                                                        <strong>{{ test_name }}:</strong> 
+                                                        <span class="{{ 'highlight-warning' if 'NOT Normal' in result.comment else ('text-muted' if 'N/A' in result.comment or 'Error' in result.comment or 'Skipped' in result.comment or 'Requires' in result.comment else '') }}">
+                                                            {{ result.comment }}
+                                                        </span>
+                                                        {% if result.p_value and result.p_value != 'N/A' %}
+                                                            <span class="text-muted">(p={{ result.p_value }})</span>
+                                                        {% elif result.statistic and result.statistic != 'N/A' and 'Anderson-Darling' in test_name %}
+                                                             <span class="text-muted">(stat={{ result.statistic }})</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <span class="text-muted">No normality tests run or results unavailable.</span>
+                                                {% endif %}
+                                            </li>
+                                            <!-- Zero Percentage -->
+                                            <li class="list-group-item">
+                                                <strong>Zeros %:</strong> 
+                                                <span class="{{ 'highlight-warning' if details.zero_percent is number and details.zero_percent > (summary.high_zero_fraction_threshold|default(0.5))*100 else ('text-muted' if details.zero_percent == 'N/A' or details.zero_percent == 'Error' else '') }}">
+                                                    {{ details.zero_percent if details.zero_percent is number else details.zero_percent|default('N/A') }}
+                                                    {% if details.zero_percent is number %}%{% endif %}
+                                                </span>
+                                                {% if details.zero_comment %}<span class="comment">{{ details.zero_comment }}</span>{% endif %}
+                                            </li>
+                                            <!-- Modes -->
+                                            {% if details.modes %}
+                                            <li class="list-group-item">
+                                                <strong>Mode(s):</strong> {{ details.modes | join(', ') }}
+                                                {% if details.mode_comment %}<span class="comment">{{ details.mode_comment }}</span>{% endif %}
+                                            </li>
+                                            {% endif %}
+                                            <!-- Quantiles -->
+                                            {% if details.quantiles and 'Error' not in details.quantiles %}
+                                            <li class="list-group-item">
+                                                <strong class="d-block mb-1">Quantiles:</strong>
+                                                <div class="quantile-grid">
+                                                    {% for perc, val in details.quantiles.items() %}
+                                                        <div><strong>{{ perc }}</strong>{{ "{:.4g}".format(val) if val is number and val != 'N/A' else (val|default('N/A')) }}</div>
+                                                    {% endfor %}
+                                                </div>
+                                            </li>
+                                            {% elif details.quantiles and 'Error' in details.quantiles %}
+                                                <li class="list-group-item"><strong>Quantiles:</strong> <span class="text-muted">Error calculating</span></li>
+                                            {% endif %}
+                                            <!-- Outliers -->
+                                            <li class="list-group-item">
+                                                <strong>Outliers (IQR):</strong> 
+                                                {% if details.outliers_iqr is defined and details.outliers_iqr != 'N/A' and details.outliers_iqr != 'Error' %}
+                                                    <span class="{{ 'highlight-issue' if details.outliers_percent[:-1]|float(default=0) > 5 else ('highlight-warning' if details.outliers_percent[:-1]|float(default=0) > 0 else '') }}">
+                                                        {{ details.outliers_iqr }} ({{ details.outliers_percent }})
+                                                    </span>
+                                                {% else %} 
+                                                    <span class="text-muted">{{ details.outliers_iqr | default('N/A') }}</span> 
+                                                {% endif %}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if summary.categorical_col_details %}
+                <div class="feature-section" id="text-categorical-patterns-section">
+                    <div class="card mb-4">
+                        <div class="card-header bottom-color-border"><i class="bi bi-fonts section-icon"></i>Text & Categorical Patterns</div>
+                        <div class="card-body">
+                            <div class="row row-cols-1 row-cols-md-2 g-4">
+                                {% for col, details in summary.categorical_col_details.items() %}
+                                <div class="col">
+                                    <div class="card h-100 shadow-sm"> <!-- Inner card -->
+                                        <div class="card-header"><code>{{ col }}</code></div>
+                                        <div class="card-body small">
+                                            <ul class="list-unstyled mb-0">
+                                                {% if details.cardinality_comment %}
+                                                    <li class="mb-2"><strong>Cardinality:</strong> <span class="{{ 'highlight-info' if 'High' in details.cardinality_comment else ('highlight-warning' if 'Low' in details.cardinality_comment else '') }}">{{ details.cardinality_comment }}</span></li>
+                                                {% endif %}
+                                                {% if details.min_len is defined and details.min_len != 'Error' and details.min_len != 'N/A'%}
+                                                    <li class="mb-2"><strong>Length (Min/Avg/Max):</strong> {{ details.min_len }} / {{ details.avg_len }} / {{ details.max_len }}</li>
+                                                {% elif details.min_len == 'Error' %} <li class="mb-2"><strong>Length:</strong> <span class="text-muted">Error</span></li> {% endif %}
+                                                {% if details.avg_words is defined and details.avg_words != 'N/A' %}
+                                                    <li class="mb-2"><strong>Avg Words:</strong> {{ details.avg_words }} | <strong>Avg Sentences:</strong> {{ details.avg_sentences }}</li>
+                                                {% endif %}
+                                                {% if details.whitespace_comment %}
+                                                    <li class="mb-2"><strong>Whitespace Issue:</strong> <span class="highlight-warning">{{ details.whitespace_comment }} <i class="bi bi-tools"></i></span></li>
+                                                {% endif %}
+                                                {% if details.special_chars_comment %}
+                                                    <li class="mb-2"><strong>Special Chars Issue:</strong> <span class="highlight-warning">{{ details.special_chars_comment }} <i class="bi bi-tools"></i></span></li>
+                                                {% endif %}
+                                                {% if details.detected_patterns %}
+                                                    <li class="mb-2"><strong>Detected Patterns:</strong> <span class="highlight-info">{{ details.detected_patterns }}</span></li>
+                                                {% endif %}
+                                                {% if details.top_5_values %}
+                                                    <li class="mt-2">
+                                                        <strong class="d-block mb-1">Top Values:</strong>
+                                                        <ul class="list-unstyled value-counts-list">
+                                                            {% for value, count_str in details.top_5_values.items() %}
+                                                                <li title="{{ value }}"> <code class="vc-value">{{ value | truncate(35, True) }}</code> <span class="vc-count">{{ count_str }}</span> </li>
+                                                            {% else %} <li><em class="text-muted">N/A</em></li> {% endfor %}
+                                                        </ul>
+                                                    </li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if summary.datetime_cols %}
+                <div class="feature-section" id="datetime-patterns-section">
+                    <div class="card mb-4">
+                        <div class="card-header bottom-color-border"><i class="bi bi-calendar-week section-icon"></i>Date/Time Patterns</div>
+                        <div class="card-body">
+                            <p class="mb-2">Found {{ summary.datetime_cols|length }} potential datetime column(s):</p>
+                            <ul class="list-unstyled">
+                            {% for col in summary.datetime_cols %}
+                                <li class="mb-1"><code>{{ col }}</code>
+                                    {% if summary.datetime_summary and summary.datetime_summary[col] %}
+                                        <span class="text-muted small">
+                                            — Range: {{ summary.datetime_summary[col].min | default('N/A') }} to {{ summary.datetime_summary[col].max | default('N/A') }}
+                                            {% if summary.datetime_summary[col].monotonic and summary.datetime_summary[col].monotonic != 'N/A' and summary.datetime_summary[col].monotonic != 'Error' %}
+                                                | <span class="highlight-info">Monotonic: {{ summary.datetime_summary[col].monotonic }}</span>
+                                            {% endif %}
+                                        </span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'pearson_positive' in summary or 'correlation_info' in summary or 'correlation_error' in summary or summary.pca_summary %}
+                <div class="feature-section" id="correlation-analysis-section">
+                    <div class="card mb-4">
+                        <div class="card-header bottom-color-border"><i class="bi bi-link-45deg section-icon"></i>Correlation Analysis & PCA</div>
+                        <div class="card-body">
+                            {% set threshold = summary.correlation_threshold | default(0.3) %}
+                            <p class="small text-muted">Showing pairs with correlation magnitude >= {{ threshold }}.</p>
+                            
+                            {% if summary.pearson_positive or summary.pearson_negative or summary.spearman_positive or summary.spearman_negative or summary.kendall_positive or summary.kendall_negative %}
+                                <div class="row">
+                                    <!-- Pearson Column -->
+                                    <div class="col-lg-4 mb-3 mb-lg-0">
+                                        <h6 class="card-subheader mt-0">Pearson (Linear)</h6>
+                                        {% if summary.pearson_positive %} <p class="small text-success mb-1"><strong>Positive</strong></p> <ul class="list-unstyled correlation-list small"> {% for c1, c2, corr, mag in summary.pearson_positive %} <li><code>{{ c1 }}</code>↔<code>{{ c2 }}</code> ({{ "{:.2f}".format(corr) }})</li> {% endfor %} </ul> {% endif %}
+                                        {% if summary.pearson_negative %} <p class="small text-danger mt-2 mb-1"><strong>Negative</strong></p> <ul class="list-unstyled correlation-list small"> {% for c1, c2, corr, mag in summary.pearson_negative %} <li><code>{{ c1 }}</code>↔<code>{{ c2 }}</code> ({{ "{:.2f}".format(corr) }})</li> {% endfor %} </ul> {% endif %}
+                                        {% if not summary.pearson_positive and not summary.pearson_negative %}<p class="small text-muted">None found.</p>{% endif %}
+                                    </div>
+                                    <!-- Spearman Column -->
+                                    <div class="col-lg-4 mb-3 mb-lg-0">
+                                        <h6 class="card-subheader mt-0">Spearman (Monotonic)</h6>
+                                        {% if summary.spearman_positive %} <p class="small text-success mb-1"><strong>Positive</strong></p> <ul class="list-unstyled correlation-list small"> {% for c1, c2, corr, mag in summary.spearman_positive %} <li><code>{{ c1 }}</code>↔<code>{{ c2 }}</code> ({{ "{:.2f}".format(corr) }})</li> {% endfor %} </ul> {% endif %}
+                                        {% if summary.spearman_negative %} <p class="small text-danger mt-2 mb-1"><strong>Negative</strong></p> <ul class="list-unstyled correlation-list small"> {% for c1, c2, corr, mag in summary.spearman_negative %} <li><code>{{ c1 }}</code>↔<code>{{ c2 }}</code> ({{ "{:.2f}".format(corr) }})</li> {% endfor %} </ul> {% endif %}
+                                        {% if not summary.spearman_positive and not summary.spearman_negative %}<p class="small text-muted">None found.</p>{% endif %}
+                                    </div>
+                                    <!-- Kendall Column -->
+                                    <div class="col-lg-4">
+                                        <h6 class="card-subheader mt-0">Kendall Tau (Ordinal)</h6>
+                                        {% if summary.kendall_positive %} <p class="small text-success mb-1"><strong>Positive</strong></p> <ul class="list-unstyled correlation-list small"> {% for c1, c2, corr, mag in summary.kendall_positive %} <li><code>{{ c1 }}</code>↔<code>{{ c2 }}</code> ({{ "{:.2f}".format(corr) }})</li> {% endfor %} </ul> {% endif %}
+                                        {% if summary.kendall_negative %} <p class="small text-danger mt-2 mb-1"><strong>Negative</strong></p> <ul class="list-unstyled correlation-list small"> {% for c1, c2, corr, mag in summary.kendall_negative %} <li><code>{{ c1 }}</code>↔<code>{{ c2 }}</code> ({{ "{:.2f}".format(corr) }})</li> {% endfor %} </ul> {% endif %}
+                                        {% if not summary.kendall_positive and not summary.kendall_negative %}<p class="small text-muted">None found.</p>{% endif %}
+                                    </div>
+                                </div>
+                                <hr class="my-3">
+                                <p class="small text-muted mb-0"><strong>Note:</strong> Correlation does not imply causation.</p>
+                            {% elif summary.correlation_error %}
+                                 <p class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i> Could not calculate correlations: {{ summary.correlation_error }}</p>
+                            {% elif summary.correlation_info %}
+                                 <p class="text-muted mb-0">{{ summary.correlation_info }}</p>
+                            {% else %}
+                                 <p class="text-muted mb-0">Correlation analysis not performed or results unavailable.</p>
+                            {% endif %}
+
+                            {% if summary.pca_summary %}
+                                <hr class="my-4"> 
+                                <h6 class="card-subheader"><i class="bi bi-arrows-angle-contract section-icon" style="font-size: 1em;"></i>Principal Component Analysis (PCA)</h6>
+                                {% if summary.pca_summary.error %}
+                                    <p class="text-danger small"><i class="bi bi-x-octagon-fill me-1"></i>{{ summary.pca_summary.error }}</p>
+                                {% elif summary.pca_summary.message %}
+                                    <p class="text-muted small"><i class="bi bi-info-circle-fill me-1"></i>{{ summary.pca_summary.message }}</p>
+                                {% elif summary.pca_summary.explained_variance_ratio %}
+                                    <p class="small">PCA performed on {{ summary.pca_summary.n_original_features }} numerical features (after imputation & scaling).</p>
+                                    <div class="row">
+                                        <div class="col-md-7 mb-3 mb-md-0">
+                                            <strong class="d-block mb-1 small">Explained Variance by Component:</strong>
+                                            <div style="max-height: 250px; overflow-y: auto;">
+                                                <table class="table table-sm table-bordered table-striped small" style="width: auto; min-width: 300px;">
+                                                    <thead><tr><th>Component</th><th>Variance %</th><th>Cumulative %</th></tr></thead>
+                                                    <tbody>
+                                                        {% set max_pca_rows_to_show = 10 %}
+                                                        {% for i in range(summary.pca_summary.explained_variance_ratio|length) %}
+                                                            {% if i < max_pca_rows_to_show or (i == (summary.pca_summary.explained_variance_ratio|length -1) and i >= max_pca_rows_to_show) %}
+                                                            <tr><td>PC{{ i + 1 }}</td><td>{{ "%.2f"|format(summary.pca_summary.explained_variance_ratio[i]) }}%</td><td>{{ "%.2f"|format(summary.pca_summary.cumulative_explained_variance[i]) }}%</td></tr>
+                                                            {% elif i == max_pca_rows_to_show %}
+                                                            <tr><td colspan="3" class="text-center text-muted fst-italic">... ({{ (summary.pca_summary.explained_variance_ratio|length) - (max_pca_rows_to_show + 1) }} more) ...</td></tr>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5">
+                                            {% if summary.pca_summary.components_for_threshold %}
+                                            <strong class="d-block mb-1 small">Components for Variance Thresholds:</strong>
+                                            <ul class="list-unstyled small">
+                                                {% for thresh, num_comps in summary.pca_summary.components_for_threshold.items() %}
+                                                <li>To explain ~<strong>{{ thresh }}%</strong> variance: <span class="{{'fw-bold' if num_comps != 'N/A'}}">{{ num_comps }}</span> component(s)</li>
+                                                {% endfor %}
+                                            </ul>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if summary.pca_summary.suggestion %}
+                                        <p class="mt-3 small alert alert-info py-2 px-3 mb-0"><i class="bi bi-lightbulb-fill me-1"></i><strong>Suggestion:</strong> {{ summary.pca_summary.suggestion }}</p>
+                                    {% endif %}
+                                {% else %}
+                                     <p class="text-muted small">PCA results not available or not applicable for this dataset.</p>
+                                {% endif %}
+                            {% endif %}
+                        </div> 
+                    </div> 
+                </div> 
+                {% endif %}
+
+                {% if summary.grouped_stats %}
+                <div class="feature-section" id="grouped-analysis-section">
+                    <div class="card mb-4">
+                        <div class="card-header bottom-color-border"><i class="bi bi-bar-chart-steps section-icon"></i>Grouped Numerical Analysis</div>
+                         <div class="card-body">
+                            <p class="small text-muted">Mean and Median of numerical columns, grouped by low-cardinality categories (showing groups with >5 data points).</p>
+                            <div class="row row-cols-1 row-cols-lg-2 g-4">
+                                {% for group_col, num_col_data in summary.grouped_stats.items() %}
+                                  <div class="col">
+                                      <div class="card shadow-sm">
+                                          <div class="card-header">Grouped by <code>{{ group_col }}</code></div>
+                                          <div class="card-body py-2 px-3">
+                                              {% for num_col, stats_dict in num_col_data.items() %}
+                                                  <strong class="d-block small mb-1 mt-2">Stats for <code>{{ num_col }}</code>:</strong>
+                                                  <table class="table table-sm table-bordered table-hover table-grouped-stats mb-2">
+                                                        <thead><tr><th>{{ group_col }} Value</th><th>Mean</th><th>Median</th></tr></thead>
+                                                        <tbody>
+                                                        {% for cat_value, metrics in stats_dict.items() %}
+                                                           <tr><td>
+                                                                {% set display_cat_value = "Missing/NaN" if cat_value is none or (cat_value is number and cat_value != cat_value) else cat_value|string %}
+                                                                <code>{{ display_cat_value|truncate(25, True) }}</code>
+                                                            </td><td>{{ "{:.2f}".format(metrics.mean) }}</td><td>{{ "{:.2f}".format(metrics.median) }}</td></tr>
+                                                        {% else %}
+                                                            <tr><td colspan="3" class="text-muted text-center small">No groups with sufficient data.</td></tr>
+                                                        {% endfor %}
+                                                        </tbody>
+                                                  </table>
+                                              {% else %}
+                                                  <p class="small text-muted mb-0">No significant numerical associations found for this group.</p>
+                                              {% endfor %}
+                                          </div>
+                                      </div>
+                                  </div>
+                                {% else %}
+                                     <div class="col-12"> <p class="text-muted">No significant group variations found or applicable groups available.</p> </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if summary.engineering_suggestions %}
+                <div class="feature-section" id="suggestions-section">
+                    <div class="card mb-4">
+                         <div class="card-header bottom-color-border"><i class="bi bi-lightbulb-fill section-icon"></i>Feature Engineering & Cleaning Suggestions</div>
+                         <div class="list-group list-group-flush suggestions-list">
+                            {% for sug in summary.engineering_suggestions %}
+                                <div class="list-group-item py-2">
+                                    <strong class="d-block"><i class="bi bi-check-circle-fill text-primary me-1"></i>{{ sug.finding }} {% if sug.column != '(Multiple)' %}(<code>{{ sug.column }}</code>){% endif %}</strong>
+                                    <span class="text-muted ms-3">{{ sug.suggestion }}</span>
+                                </div>
+                            {% else %}
+                                <div class="list-group-item"> <p class="text-muted mb-0">No specific automated suggestions generated based on current analysis.</p> </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            {% elif not error_message %}
+                <div class="alert alert-warning" role="alert"> <i class="bi bi-info-circle-fill me-2"></i>Could not generate feature summary. Please ensure data is loaded correctly or try loading different data. </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <!-- Floating Brand in Bottom Left Corner -->
+    <div id="floating-brand">
+        <a href="{{ url_for('index') }}" class="text-decoration-none">
+             <img src="{{ url_for('static', filename='img/logomain.png') }}" alt="DataWarp Logo" style="height: 20px; vertical-align: text-bottom; margin-right: 5px;">
+             DataWarp
+        </a>
+    </div>
+
+
+    <!-- Floating Report an Issue Button -->
+    <a href="https://tally.so/r/w7gWkR" target="_blank" rel="noopener noreferrer" class="floating-report-btn">
+        <span class="report-text">Report an issue</span>
+        <i class="bi bi-bug-fill report-icon"></i>
+    </a>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebarToggles = document.querySelectorAll('#feature-toggles .list-group-item');
+        const featureSections = document.querySelectorAll('.feature-section');
+        const contentArea = document.querySelector('.content');
+
+        sidebarToggles.forEach(toggle => {
+            toggle.addEventListener('click', function (event) {
+                event.preventDefault();
+                sidebarToggles.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const targetId = this.getAttribute('data-target-id');
+                featureSections.forEach(section => {
+                    section.style.display = (targetId === 'all' || section.id === targetId + '-section') ? 'block' : 'none';
+                });
+                if (contentArea) { contentArea.scrollTop = 0; }
+            });
+        });
+        
+        // Set initial state: Click "All Sections" or the first available toggle
+        const initialActiveToggle = document.querySelector('#feature-toggles .list-group-item.active');
+        if (initialActiveToggle) { 
+            initialActiveToggle.click(); 
+        } else if (sidebarToggles.length > 0) { 
+            sidebarToggles[0].click(); 
+        }
+    });
+    </script>
+</body>
+</html>
