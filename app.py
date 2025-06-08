@@ -23,6 +23,11 @@ import plotly.io as pio
 import plotly.figure_factory as ff
 import webbrowser
 import threading
+import requests
+from packaging import version
+import signal
+import subprocess
+
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -74,6 +79,62 @@ except ImportError:
     SKLEARN_AVAILABLE = False
 
 __version__ = "1.0.3"
+
+# IMPORTANT: Set this to your GitHub repository in the format "username/reponame"
+GITHUB_REPO = "PriyanujBoruah/DataWarpApp" 
+
+# Global variable to hold update status information
+UPDATE_INFO = {
+    "available": False,
+    "new_version": None,
+    "download_url": None,
+    "error": None
+}
+
+def check_for_updates():
+    """Checks GitHub for the latest release and compares versions."""
+    global UPDATE_INFO
+    try:
+        app.logger.info(f"Checking for updates... Current version: {__version__}")
+        api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+        
+        response = requests.get(api_url, timeout=10)
+        response.raise_for_status() # Raises an error for bad status codes (4xx or 5xx)
+        
+        latest_release = response.json()
+        latest_version_str = latest_release.get("tag_name", "").lstrip('v')
+
+        if not latest_version_str:
+            app.logger.warning("Could not find tag_name in latest release from GitHub.")
+            UPDATE_INFO["error"] = "Could not parse release version."
+            return
+
+        app.logger.info(f"Latest version on GitHub: {latest_version_str}")
+
+        # Compare versions using the 'packaging' library
+        if version.parse(latest_version_str) > version.parse(__version__):
+            app.logger.info("New version available!")
+            for asset in latest_release.get("assets", []):
+                # IMPORTANT: The name of your executable in the release must be this
+                if asset['name'] == 'DataWarpApp.exe':
+                    UPDATE_INFO["available"] = True
+                    UPDATE_INFO["new_version"] = latest_version_str
+                    UPDATE_INFO["download_url"] = asset['browser_download_url']
+                    UPDATE_INFO["error"] = None
+                    return # Exit after finding the asset
+            
+            # If loop finishes without finding the .exe
+            app.logger.warning("New version found, but 'DataWarpApp.exe' asset is missing from the release.")
+            UPDATE_INFO["error"] = "Release asset not found."
+
+    except Exception as e:
+        app.logger.error(f"Error checking for updates: {e}")
+        UPDATE_INFO["error"] = str(e)
+
+def shutdown_server():
+    """Function to be called in a thread to shut down the server."""
+    app.logger.info("Server is shutting down...")
+    os.kill(os.getpid(), signal.SIGINT)
 
 
 # --- Configuration ---
@@ -490,6 +551,58 @@ def clear_session_data():
     session.pop('source_info', None)
     session.pop('saved_filename', None) # Also clear saved file link
 
+
+
+@app.route('/update-status')
+def update_status():
+    """An endpoint for the frontend to poll for update info."""
+    return jsonify(UPDATE_INFO)
+
+@app.route('/apply-update', methods=['POST'])
+def apply_update():
+    """Downloads the new executable and runs the updater script."""
+    if not UPDATE_INFO.get("available") or not UPDATE_INFO.get("download_url"):
+        return jsonify({"error": "No update available or download URL is missing."}), 400
+
+    download_url = UPDATE_INFO.get("download_url")
+    new_version = UPDATE_INFO.get("new_version")
+    
+    try:
+        # Define path for the new executable in a temporary location
+        # Using os.environ.get('TEMP', ...) is a robust way to find the temp dir
+        temp_dir = os.environ.get('TEMP', os.path.dirname(sys.executable))
+        new_exe_path = os.path.join(temp_dir, f"DataWarpApp-v{new_version}.exe")
+        
+        app.logger.info(f"Downloading update from {download_url} to {new_exe_path}")
+        response = requests.get(download_url, stream=True, timeout=300) # 5-min timeout
+        response.raise_for_status()
+        with open(new_exe_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        app.logger.info("Download complete.")
+
+        current_exe_path = sys.executable
+        updater_script_path = resource_path('updater.py')
+
+        # Launch the updater script in a new detached process
+        subprocess.Popen([sys.executable, updater_script_path, str(os.getpid()), current_exe_path, new_exe_path])
+
+        # Immediately start the shutdown process for the current app
+        shutdown_server()
+        
+        # This response may or may not reach the client, which is fine.
+        return jsonify({"message": "Update process initiated. Application is restarting."})
+
+    except Exception as e:
+        app.logger.error(f"Failed to apply update: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/shutdown', methods=['POST'])
+def shutdown():
+    """Shuts down the application server."""
+    shutdown_thread = threading.Timer(0.5, shutdown_server)
+    shutdown_thread.start()
+    return jsonify({ "message": "Server is shutting down..." }), 200
 
 
 # --- Authentication Routes ---
@@ -4692,13 +4805,22 @@ if __name__ == '__main__':
     HOST = "0.0.0.0"
     PORT = 8080
     
-    # Schedule the browser to open 1 second after the script starts
-    # This gives the server a moment to initialize before the browser connects
+    # --- Start background threads for auto-tasks ---
+
+    # 1. Schedule the browser to open 1 second after the script starts
     threading.Timer(1, open_browser).start()
+    
+    # 2. Schedule the update check to run 5 seconds after startup
+    #    This gives the app time to initialize before making web requests.
+    update_check_thread = threading.Timer(5, check_for_updates)
+    update_check_thread.daemon = True # Allows app to exit even if thread is running
+    update_check_thread.start()
+    
+    # --- Start the main server ---
     
     print(f"Starting DataWarp server v{__version__} on http://{HOST}:{PORT}")
     print("The application will open in your default browser automatically.")
     print("If it doesn't, please navigate to http://127.0.0.1:8080")
     
     # Start the production server (this is a blocking call)
-    serve(app, host=HOST, port=PORT)
+    serve(app, host=HOST, port=PORT, threads=8)
