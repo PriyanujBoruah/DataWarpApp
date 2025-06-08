@@ -96,7 +96,7 @@ def check_for_updates():
     global UPDATE_INFO
     try:
         app.logger.info(f"Checking for updates... Current version: {__version__}")
-        api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+        api_url = "https://api.github.com/repos/PriyanujBoruah/DataWarpApp/releases/latest"
         
         response = requests.get(api_url, timeout=10)
         response.raise_for_status() # Raises an error for bad status codes (4xx or 5xx)
