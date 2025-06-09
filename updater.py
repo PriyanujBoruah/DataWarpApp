@@ -3,15 +3,14 @@ import sys
 import os
 import time
 import subprocess
-import psutil  # Make sure you have run: pip install psutil
+import psutil
 
 def main():
     try:
-        # Command line arguments passed from the main app
         pid_to_kill_str, old_exe_path, new_exe_path = sys.argv[1:4]
         pid_to_kill = int(pid_to_kill_str)
     except (IndexError, ValueError):
-        print("Usage: updater.py <pid> <old_exe_path> <new_exe_path>")
+        print(f"FATAL: Updater called with invalid arguments: {sys.argv}")
         sys.exit(1)
 
     # 1. Kill the old process gracefully
@@ -20,31 +19,41 @@ def main():
             old_process = psutil.Process(pid_to_kill)
             print(f"Terminating old process (PID: {pid_to_kill})...")
             old_process.terminate()
-            # Wait for it to die
             old_process.wait(timeout=5)
+            print("Old process terminated.")
+        else:
+            print(f"Old process with PID {pid_to_kill} was already gone.")
     except psutil.NoSuchProcess:
-        print(f"Old process with PID {pid_to_kill} already gone.")
+        print(f"Old process with PID {pid_to_kill} was already gone (NoSuchProcess).")
     except Exception as e:
-        print(f"Error terminating process: {e}")
-        # Continue anyway, it might have already exited
+        print(f"Warning: Error during process termination: {e}")
 
     # Give the OS a moment to release file handles
     time.sleep(2)
 
-    # 2. Replace the old executable with the new one
-    try:
-        print(f"Replacing {old_exe_path} with {new_exe_path}")
-        if os.path.exists(old_exe_path):
-             os.remove(old_exe_path)
-        else:
-             print(f"Warning: Old executable {old_exe_path} not found, proceeding anyway.")
-        os.rename(new_exe_path, old_exe_path)
-        print("File replacement successful.")
-    except Exception as e:
-        print(f"FATAL: Error replacing executable: {e}")
-        # Attempt to relaunch the old exe if replacement fails but it still exists
-        if os.path.exists(old_exe_path):
-            subprocess.Popen([old_exe_path])
+    # 2. Retry loop for replacing the executable (to handle file locks)
+    for i in range(5): # Retry up to 5 times
+        try:
+            print(f"Attempt {i+1}: Removing old executable at {old_exe_path}")
+            if os.path.exists(old_exe_path):
+                os.remove(old_exe_path)
+            
+            print("Attempting to rename new executable...")
+            os.rename(new_exe_path, old_exe_path)
+            
+            print("File replacement successful.")
+            break # Exit the loop if successful
+        except PermissionError as e:
+            print(f"Warning: PermissionError on attempt {i+1} - file may be locked. Retrying in 1 second...")
+            print(f"    Details: {e}")
+            time.sleep(1)
+        except Exception as e:
+            print(f"FATAL: An unexpected error occurred during file replacement: {e}")
+            # If replacement fails, don't try to relaunch.
+            sys.exit(1)
+    else:
+        # This 'else' belongs to the 'for' loop. It runs if the loop finishes without a 'break'.
+        print("FATAL: Could not replace the executable after multiple attempts.")
         sys.exit(1)
 
     # 3. Relaunch the application
@@ -54,17 +63,15 @@ def main():
     sys.exit(0)
 
 if __name__ == "__main__":
-    # For debugging, you can create a log file.
-    # This helps see what the updater is doing since it runs invisibly.
-    log_file_path = os.path.join(os.path.dirname(sys.executable), "updater-log.txt")
+    # Ensure this log file is created in a writable directory.
+    # The directory of the updater script itself is a good choice.
+    log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "updater-log.txt")
     try:
         with open(log_file_path, 'a') as log_file:
-            # Redirect stdout and stderr to the log file
             sys.stdout = log_file
             sys.stderr = log_file
-            print(f"\n--- Updater started at {time.ctime()} with args: {sys.argv} ---")
+            print(f"\n--- Updater started at {time.ctime()} ---")
             main()
     except Exception as e:
-        # Fallback if logging fails
-        print(f"Updater failed to initialize logging: {e}")
+        # If logging fails, we can't do much, but the script can still run.
         main()
