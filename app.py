@@ -27,6 +27,7 @@ import requests
 from packaging import version
 import signal
 import subprocess
+import logging
 
 
 def resource_path(relative_path):
@@ -78,7 +79,7 @@ try:
 except ImportError:
     SKLEARN_AVAILABLE = False
 
-__version__ = "1.0.7"
+__version__ = "1.1.0"
 
 # IMPORTANT: Set this to your GitHub repository in the format "username/reponame"
 GITHUB_REPO = "PriyanujBoruah/DataWarpApp" 
@@ -95,41 +96,58 @@ def check_for_updates():
     """Checks GitHub for the latest release and compares versions."""
     global UPDATE_INFO
     try:
-        app.logger.info(f"Checking for updates... Current version: {__version__}")
-        api_url = "https://api.github.com/repos/PriyanujBoruah/DataWarpApp/releases/latest"
+        # Use standard logging, which works in any thread
+        logging.info(f"Checking for updates... Current version: {__version__}")
+        
+        # Use the GITHUB_REPO variable defined earlier
+        api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
         
         response = requests.get(api_url, timeout=10)
-        response.raise_for_status() # Raises an error for bad status codes (4xx or 5xx)
         
+        # Check for rate limiting or other API errors
+        if response.status_code != 200:
+            logging.warning(f"GitHub API returned status {response.status_code}. Response: {response.text[:200]}")
+            UPDATE_INFO["error"] = f"GitHub API error (Status: {response.status_code})"
+            return
+
         latest_release = response.json()
         latest_version_str = latest_release.get("tag_name", "").lstrip('v')
 
         if not latest_version_str:
-            app.logger.warning("Could not find tag_name in latest release from GitHub.")
+            logging.warning("Could not find tag_name in latest release from GitHub.")
             UPDATE_INFO["error"] = "Could not parse release version."
             return
 
-        app.logger.info(f"Latest version on GitHub: {latest_version_str}")
+        logging.info(f"Latest version on GitHub: {latest_version_str}")
 
-        # Compare versions using the 'packaging' library
         if version.parse(latest_version_str) > version.parse(__version__):
-            app.logger.info("New version available!")
-            for asset in latest_release.get("assets", []):
-                # IMPORTANT: The name of your executable in the release must be this
-                if asset['name'] == 'DataWarpApp.exe':
+            logging.info(f"New version {latest_version_str} is available!")
+            
+            assets = latest_release.get("assets", [])
+            if not assets:
+                logging.warning("New version found, but the release has no assets (no .exe file).")
+                UPDATE_INFO["error"] = "Release contains no downloadable files."
+                return
+
+            for asset in assets:
+                if asset.get('name') == 'DataWarpApp.exe':
                     UPDATE_INFO["available"] = True
                     UPDATE_INFO["new_version"] = latest_version_str
                     UPDATE_INFO["download_url"] = asset['browser_download_url']
-                    UPDATE_INFO["error"] = None
-                    return # Exit after finding the asset
+                    UPDATE_INFO["error"] = None # Clear any previous error
+                    logging.info("Update information successfully parsed.")
+                    return # Exit after finding the correct asset
             
-            # If loop finishes without finding the .exe
-            app.logger.warning("New version found, but 'DataWarpApp.exe' asset is missing from the release.")
-            UPDATE_INFO["error"] = "Release asset not found."
+            # This code runs if the loop finishes without finding the .exe
+            logging.warning("New version found, but 'DataWarpApp.exe' asset is missing from the release.")
+            UPDATE_INFO["error"] = "Required release asset not found."
 
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Network error while checking for updates: {e}")
+        UPDATE_INFO["error"] = "Network error. Please check your internet connection."
     except Exception as e:
-        app.logger.error(f"Error checking for updates: {e}")
-        UPDATE_INFO["error"] = str(e)
+        logging.error(f"An unexpected error occurred in check_for_updates: {e}", exc_info=True)
+        UPDATE_INFO["error"] = "An unexpected error occurred during update check."
 
 def shutdown_server():
     """Function to be called in a thread to shut down the server."""
@@ -4801,6 +4819,13 @@ def open_browser():
 if __name__ == '__main__':
     from waitress import serve
 
+    # Configure the standard Python logger to show messages in the console
+    # This format will look similar to Flask's default logger
+    logging.basicConfig(
+        level=logging.INFO,
+        format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+    )
+
     # Define the host and port
     HOST = "0.0.0.0"
     PORT = 8080
@@ -4810,17 +4835,17 @@ if __name__ == '__main__':
     # 1. Schedule the browser to open 1 second after the script starts
     threading.Timer(1, open_browser).start()
     
-    # 2. Schedule the update check to run 5 seconds after startup
+    # 2. Schedule the update check to run 3 seconds after startup.
     #    This gives the app time to initialize before making web requests.
-    update_check_thread = threading.Timer(5, check_for_updates)
+    #    Using a Timer runs the task just once after the delay.
+    update_check_thread = threading.Timer(3.0, check_for_updates)
     update_check_thread.daemon = True # Allows app to exit even if thread is running
     update_check_thread.start()
     
     # --- Start the main server ---
     
-    print(f"Starting DataWarp server v{__version__} on http://{HOST}:{PORT}")
-    print("The application will open in your default browser automatically.")
-    print("If it doesn't, please navigate to http://127.0.0.1:8080")
+    logging.info(f"Starting DataWarp server v{__version__} on http://{HOST}:{PORT}")
+    logging.info("The application will open in your default browser automatically.")
     
     # Start the production server (this is a blocking call)
-    serve(app, host=HOST, port=PORT, threads=8)
+    serve(app, host=HOST, port=PORT, threads=10)
