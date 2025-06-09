@@ -28,6 +28,7 @@ from packaging import version
 import signal
 import subprocess
 import logging
+import time
 
 
 def resource_path(relative_path):
@@ -578,42 +579,65 @@ def update_status():
 
 @app.route('/apply-update', methods=['POST'])
 def apply_update():
-    """Downloads the new executable and runs the updater script."""
-    if not UPDATE_INFO.get("available") or not UPDATE_INFO.get("download_url"):
-        return jsonify({"error": "No update available or download URL is missing."}), 400
+    """
+    Downloads the new executable, runs the updater script,
+    and gracefully shuts down the server.
+    """
+    if not UPDATE_INFO.get("available"):
+        return jsonify({"error": "No update available."}), 400
 
     download_url = UPDATE_INFO.get("download_url")
     new_version = UPDATE_INFO.get("new_version")
     
-    try:
-        # Define path for the new executable in a temporary location
-        # Using os.environ.get('TEMP', ...) is a robust way to find the temp dir
-        temp_dir = os.environ.get('TEMP', os.path.dirname(sys.executable))
-        new_exe_path = os.path.join(temp_dir, f"DataWarpApp-v{new_version}.exe")
-        
-        app.logger.info(f"Downloading update from {download_url} to {new_exe_path}")
-        response = requests.get(download_url, stream=True, timeout=300) # 5-min timeout
-        response.raise_for_status()
-        with open(new_exe_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-        app.logger.info("Download complete.")
+    def download_and_run_updater():
+        """This function will run in a background thread."""
+        try:
+            # Create a temporary directory for the download if it doesn't exist
+            temp_dir = os.path.join(os.path.dirname(sys.executable), 'temp_updates')
+            os.makedirs(temp_dir, exist_ok=True)
 
-        current_exe_path = sys.executable
-        updater_script_path = resource_path('updater.py')
+            # Define the path for the new executable
+            new_exe_filename = f"DataWarpApp-v{new_version}.exe"
+            new_exe_path = os.path.join(temp_dir, new_exe_filename)
 
-        # Launch the updater script in a new detached process
-        subprocess.Popen([sys.executable, updater_script_path, str(os.getpid()), current_exe_path, new_exe_path])
+            logging.info(f"Downloading update from {download_url} to {new_exe_path}")
+            response = requests.get(download_url, stream=True, timeout=60)
+            response.raise_for_status()
+            with open(new_exe_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+            logging.info("Download complete.")
 
-        # Immediately start the shutdown process for the current app
-        shutdown_server()
-        
-        # This response may or may not reach the client, which is fine.
-        return jsonify({"message": "Update process initiated. Application is restarting."})
+            # Path to the currently running executable
+            current_exe_path = sys.executable
 
-    except Exception as e:
-        app.logger.error(f"Failed to apply update: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
+            # Path to the updater script bundled with the app
+            updater_script_path = resource_path('updater.py')
+
+            # Give the server a moment to send the '200 OK' response
+            time.sleep(1)
+
+            logging.info("Handing off to updater script...")
+            # Launch the updater script in a new, detached process
+            subprocess.Popen([sys.executable, updater_script_path, str(os.getpid()), current_exe_path, new_exe_path])
+            
+            # Use os._exit() for a more immediate exit after the Popen call.
+            # This is one of the few cases where os._exit is appropriate.
+            os._exit(0)
+
+        except Exception as e:
+            logging.error(f"Failed to apply update in background thread: {e}", exc_info=True)
+            # This error won't be sent to the user, but will be in the log.
+            UPDATE_INFO["error"] = f"Update failed during download/execution: {e}"
+
+    # Start the download and update process in a background thread
+    update_thread = threading.Thread(target=download_and_run_updater)
+    update_thread.daemon = True
+    update_thread.start()
+
+    # Immediately return a success response to the user.
+    # The actual work will happen in the background thread.
+    return jsonify({"message": "Update process started. The application will restart shortly."})
 
 @app.route('/shutdown', methods=['POST'])
 def shutdown():
