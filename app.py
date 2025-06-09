@@ -80,7 +80,7 @@ try:
 except ImportError:
     SKLEARN_AVAILABLE = False
 
-__version__ = "1.1.1"
+__version__ = "1.0.0"
 
 # IMPORTANT: Set this to your GitHub repository in the format "username/reponame"
 GITHUB_REPO = "PriyanujBoruah/DataWarpApp" 
@@ -93,62 +93,39 @@ UPDATE_INFO = {
     "error": None
 }
 
+# In app.py
+
 def check_for_updates():
-    """Checks GitHub for the latest release and compares versions."""
+    """Checks GitHub for the latest release version number."""
     global UPDATE_INFO
     try:
-        # Use standard logging, which works in any thread
         logging.info(f"Checking for updates... Current version: {__version__}")
         
-        # Use the GITHUB_REPO variable defined earlier
+        # Make sure you have GITHUB_REPO = "your_username/your_repo" defined globally
         api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
         
         response = requests.get(api_url, timeout=10)
-        
-        # Check for rate limiting or other API errors
-        if response.status_code != 200:
-            logging.warning(f"GitHub API returned status {response.status_code}. Response: {response.text[:200]}")
-            UPDATE_INFO["error"] = f"GitHub API error (Status: {response.status_code})"
-            return
+        response.raise_for_status() # Raises an error for bad status codes
 
         latest_release = response.json()
         latest_version_str = latest_release.get("tag_name", "").lstrip('v')
 
         if not latest_version_str:
             logging.warning("Could not find tag_name in latest release from GitHub.")
-            UPDATE_INFO["error"] = "Could not parse release version."
             return
 
         logging.info(f"Latest version on GitHub: {latest_version_str}")
 
+        # Compare versions
         if version.parse(latest_version_str) > version.parse(__version__):
             logging.info(f"New version {latest_version_str} is available!")
-            
-            assets = latest_release.get("assets", [])
-            if not assets:
-                logging.warning("New version found, but the release has no assets (no .exe file).")
-                UPDATE_INFO["error"] = "Release contains no downloadable files."
-                return
+            UPDATE_INFO["available"] = True
+            UPDATE_INFO["new_version"] = latest_version_str
+            UPDATE_INFO["error"] = None # Clear any previous errors
 
-            for asset in assets:
-                if asset.get('name') == 'DataWarpApp.exe':
-                    UPDATE_INFO["available"] = True
-                    UPDATE_INFO["new_version"] = latest_version_str
-                    UPDATE_INFO["download_url"] = asset['browser_download_url']
-                    UPDATE_INFO["error"] = None # Clear any previous error
-                    logging.info("Update information successfully parsed.")
-                    return # Exit after finding the correct asset
-            
-            # This code runs if the loop finishes without finding the .exe
-            logging.warning("New version found, but 'DataWarpApp.exe' asset is missing from the release.")
-            UPDATE_INFO["error"] = "Required release asset not found."
-
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Network error while checking for updates: {e}")
-        UPDATE_INFO["error"] = "Network error. Please check your internet connection."
     except Exception as e:
-        logging.error(f"An unexpected error occurred in check_for_updates: {e}", exc_info=True)
-        UPDATE_INFO["error"] = "An unexpected error occurred during update check."
+        logging.error(f"Error checking for updates: {e}")
+        UPDATE_INFO["error"] = str(e)
 
 def shutdown_server():
     """Function to be called in a thread to shut down the server."""
@@ -576,68 +553,6 @@ def clear_session_data():
 def update_status():
     """An endpoint for the frontend to poll for update info."""
     return jsonify(UPDATE_INFO)
-
-@app.route('/apply-update', methods=['POST'])
-def apply_update():
-    """
-    Downloads the new executable, runs the updater script,
-    and gracefully shuts down the server.
-    """
-    if not UPDATE_INFO.get("available"):
-        return jsonify({"error": "No update available."}), 400
-
-    download_url = UPDATE_INFO.get("download_url")
-    new_version = UPDATE_INFO.get("new_version")
-    
-    def download_and_run_updater():
-        """This function will run in a background thread."""
-        try:
-            # Create a temporary directory for the download if it doesn't exist
-            temp_dir = os.path.join(os.path.dirname(sys.executable), 'temp_updates')
-            os.makedirs(temp_dir, exist_ok=True)
-
-            # Define the path for the new executable
-            new_exe_filename = f"DataWarpApp-v{new_version}.exe"
-            new_exe_path = os.path.join(temp_dir, new_exe_filename)
-
-            logging.info(f"Downloading update from {download_url} to {new_exe_path}")
-            response = requests.get(download_url, stream=True, timeout=60)
-            response.raise_for_status()
-            with open(new_exe_path, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
-            logging.info("Download complete.")
-
-            # Path to the currently running executable
-            current_exe_path = sys.executable
-
-            # Path to the updater script bundled with the app
-            updater_script_path = resource_path('updater.py')
-
-            # Give the server a moment to send the '200 OK' response
-            time.sleep(1)
-
-            logging.info("Handing off to updater script...")
-            # Launch the updater script in a new, detached process
-            subprocess.Popen([sys.executable, updater_script_path, str(os.getpid()), current_exe_path, new_exe_path])
-            
-            # Use os._exit() for a more immediate exit after the Popen call.
-            # This is one of the few cases where os._exit is appropriate.
-            os._exit(0)
-
-        except Exception as e:
-            logging.error(f"Failed to apply update in background thread: {e}", exc_info=True)
-            # This error won't be sent to the user, but will be in the log.
-            UPDATE_INFO["error"] = f"Update failed during download/execution: {e}"
-
-    # Start the download and update process in a background thread
-    update_thread = threading.Thread(target=download_and_run_updater)
-    update_thread.daemon = True
-    update_thread.start()
-
-    # Immediately return a success response to the user.
-    # The actual work will happen in the background thread.
-    return jsonify({"message": "Update process started. The application will restart shortly."})
 
 @app.route('/shutdown', methods=['POST'])
 def shutdown():
