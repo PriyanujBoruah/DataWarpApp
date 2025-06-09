@@ -79,7 +79,7 @@ try:
 except ImportError:
     SKLEARN_AVAILABLE = False
 
-__version__ = "1.1.1"
+__version__ = "1.1.0"
 
 # IMPORTANT: Set this to your GitHub repository in the format "username/reponame"
 GITHUB_REPO = "PriyanujBoruah/DataWarpApp" 

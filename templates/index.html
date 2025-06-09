@@ -330,6 +330,15 @@
 </head>
 <body>
 
+    <!-- =============================================================== -->
+    <!-- 1. ADD THE NOTIFICATION HTML PLACEHOLDER HERE (NEAR THE TOP)    -->
+    <!-- =============================================================== -->
+    <div id="update-notification" class="alert alert-info shadow-sm" style="display:none; position:fixed; top:20px; right:20px; z-index: 2000; cursor: pointer;">
+        A new version is available!
+        <button id="update-button" class="btn btn-sm btn-primary ms-2">Update Now</button>
+    </div>
+    <!-- =============================================================== -->
+
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
@@ -509,6 +518,67 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const updateNotification = document.getElementById('update-notification');
+            const updateButton = document.getElementById('update-button');
+
+            // Function to check for updates
+            function checkForUpdate() {
+                fetch('/update-status')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // If the backend says an update is available, show the notification
+                        if (data && data.available) {
+                            updateNotification.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        // Silently fail in the console if the check doesn't work
+                        console.error('Update check failed:', error);
+                    });
+            }
+
+            // Check for updates once when the page loads, after a short delay
+            setTimeout(checkForUpdate, 2000); // 2-second delay
+            
+            // Then, check for updates periodically (e.g., every 30 minutes)
+            setInterval(checkForUpdate, 30 * 60 * 1000);
+
+            // --- Event handler for the "Update Now" button ---
+            updateButton.addEventListener('click', function(event) {
+                // Stop the click from propagating to the parent div if needed
+                event.stopPropagation(); 
+                
+                updateButton.disabled = true;
+                updateButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
+
+                fetch('/apply-update', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert('Update failed: ' + data.error);
+                            updateButton.disabled = false;
+                            updateButton.textContent = 'Update Now';
+                        } else {
+                            // The backend handles the restart. 
+                            // This message lets the user know what's happening.
+                            updateNotification.innerHTML = 'Application is restarting... Please wait.';
+                        }
+                    })
+                    .catch(err => {
+                        alert('An error occurred while trying to update. Check the console for details.');
+                        updateButton.disabled = false;
+                        updateButton.textContent = 'Update Now';
+                    });
+            });
+        });
+
+
         // JavaScript for file upload drag & drop + click (from your original)
         document.addEventListener('DOMContentLoaded', function() {
             const fileInput = document.getElementById('fileInput');
